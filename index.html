@@ -83,6 +83,7 @@
 <div class="container">
     <button class="theme-toggle" id="theme-btn">🌙</button>
 
+    <!-- MÀN HÌNH ĐĂNG NHẬP / ĐĂNG KÝ -->
     <div id="auth-screen" class="screen active">
         <h2 style="margin-top: 10px; font-size: 20px;">Hệ Thống Đăng Nhập</h2>
         <input type="text" id="username-auth" placeholder="Tên đăng nhập">
@@ -92,6 +93,7 @@
         <button id="register-btn" style="background: #28a745;">Tạo Tài Khoản Mới</button>
     </div>
 
+    <!-- MÀN HÌNH KHÔI PHỤC MẬT KHẨU -->
     <div id="forgot-screen" class="screen">
         <h2>Khôi Phục Mật Khẩu</h2>
         <p style="font-size:12px; opacity: 0.8; margin-bottom: 12px;">Mã OTP đổi mật khẩu sẽ gửi về Telegram Admin.</p>
@@ -106,6 +108,7 @@
         <button id="back-auth-btn" style="background:#6c757d; margin-top:10px;">Quay lại</button>
     </div>
 
+    <!-- MÀN HÌNH CHÍNH: QUẢN LÝ & THUÊ DỊCH VỤ -->
     <div id="main-screen" class="screen">
         <div id="user-info">
             <div class="user-meta">
@@ -114,16 +117,19 @@
             </div>
             <div class="user-meta">
                 <div>Ví: <span class="balance-badge" id="current-balance">0đ</span> 
-                    <button id="self-deposit-btn" style="display:none; padding: 2px 6px; background:#ffc107; color:black; font-size:10px; border-radius:4px; margin-left:5px;">➕ Nạp Tiền Bản Thân</button>
+                    <button id="self-deposit-btn" style="display:none; padding: 2px 6px; background:#ffc107; color:black; font-size:10px; border-radius:4px; margin-left:5px;">➕ Nạp Bản Thân</button>
                 </div>
                 <div id="admin-global-actions" style="display:none;">
-                    <button id="up-acc-pool-btn" style="background:#6f42c1; padding:3px 8px; font-size:11px;">📦 Up Acc Vào Kho</button>
+                    <button id="up-acc-pool-btn" style="background:#6f42c1; padding:3px 6px; font-size:11px; display:inline-block;">📦 Up Acc Kho</button>
+                    <button id="admin-autoreply-btn" style="background:#e83e8c; padding:3px 6px; font-size:11px; display:inline-block;">🤖 Cài Auto-Reply Admin</button>
                 </div>
             </div>
         </div>
 
+        <!-- BOX HIỂN THỊ KẾT QUẢ XUẤT ACC KHI MUA THÀNH CÔNG -->
         <div id="delivery-box" style="display:none;" class="result-box"></div>
 
+        <!-- MỤC THUÊ DỊCH VỤ CHUYÊN NGHIỆP -->
         <div class="section-label">⚡ Thuê Dịch Vụ Hệ Thống</div>
         <div class="services-grid">
             <div class="service-card">
@@ -154,6 +160,7 @@
         </div>
     </div>
 
+    <!-- MÀN HÌNH CHAT -->
     <div id="chat-screen" class="screen">
         <div id="chat-header">
             <span><span id="chat-with-user">...</span><span id="target-badge"></span></span>
@@ -328,6 +335,21 @@
       }
   });
 
+  // --- CÀI ĐẶT AUTO REPLY CHO CHÍNH TÀI KHOẢN ADMIN/QTV ---
+  document.getElementById('admin-autoreply-btn').addEventListener('click', () => {
+      if(!currentUser) return;
+      get(child(ref(db), `users/${currentUser.uid}`)).then((snap) => {
+          const currentReply = (snap.exists() && snap.val().autoReply) ? snap.val().autoReply : "";
+          const text = prompt(`[Cài đặt Auto-Reply] Nhập nội dung bạn muốn tự động trả lời khi có người nhắn tin tới:\n(Để trống nếu muốn TẮT tính năng này)`, currentReply);
+          
+          if(text !== null) {
+              update(ref(db, `users/${currentUser.uid}`), { autoReply: text.trim() ? text.trim() : null }).then(() => {
+                  alert(text.trim() ? "🎉 Đã bật & lưu tin nhắn Auto-reply thành công cho bạn!" : "🚫 Đã tắt tính năng Auto-reply.");
+              });
+          }
+      });
+  });
+
   // --- XỬ LÝ THUÊ DỊCH VỤ (BƠM MP & MUA ACC) ---
   document.querySelectorAll('.rent-btn').forEach(btn => {
       btn.addEventListener('click', (e) => {
@@ -392,7 +414,7 @@
       });
   });
 
-  // --- ADMIN/QTV UP ACC VÀO KHO HÀNG (Tách rõ Tài khoản và Mật khẩu) ---
+  // --- ADMIN/QTV UP ACC VÀO KHO HÀNG ---
   document.getElementById('up-acc-pool-btn').addEventListener('click', () => {
       const accUser = prompt("Nhập Tên tài khoản (Username) cần bổ sung vào kho:");
       if (accUser === null || accUser.trim() === "") return alert("Không được bỏ trống tài khoản!");
@@ -486,7 +508,7 @@
 
       let html = `
         <div class="user-row">
-            <span><strong>${userData.username}</strong> ${roleBadge} [${uBalance.toLocaleString('vi-VN')}đ] ${isBanned ? '❌' : ''}</span>
+            <span><strong>${userData.username}</strong> ${roleBadge} [<span style="color:#28a745;font-weight:bold;">${uBalance.toLocaleString('vi-VN')}đ</span>] ${isBanned ? '❌' : ''}</span>
             <div class="actions-row">
                 <button style="background:#6f42c1;" class="star-toggle-btn" data-uid="${uid}">${isStarredList ? '⭐ Hủy' : '⭐ Chú ý'}</button>
                 <button class="start-chat-btn" data-uid="${uid}" data-name="${userData.username}">Chat</button>
@@ -498,13 +520,13 @@
       if ((currentUser.role === 'admin' || currentUser.role === 'mod') && khongPhaiChinhMinh) {
           html += `<div class="admin-tools"><span>🔧 QTV:</span>`;
           html += `
+            <button style="background:#28a745;" class="money-btn">💵 Cộng/Trừ Tiền</button>
             <button style="background:#dc3545;" class="ban-btn" data-status="${isBanned}">Ban</button>
             <button style="background:#ffc107; color:black;" class="pwd-btn">Mật khẩu</button>
             <button style="background:#17a2b8;" class="autorep-btn">Auto-rep</button>
             <button style="background:#7d0000; color:white;" class="delete-user-btn">🗑️ Xóa TK</button>
           `;
           if (currentUser.role === 'admin') {
-              html += `<button style="background:#28a745;" class="money-btn">💵 Sửa Tiền</button>`;
               html += `<button style="background:#bc5100;" class="role-btn">${isTargetMod ? 'Hạ cấp User' : '⚡ Lên QTV'}</button>`;
           }
           html += `</div>`;
@@ -517,6 +539,23 @@
       item.querySelector('.star-toggle-btn').addEventListener('click', () => toggleStarUser(uid));
       
       if (currentUser.role === 'admin' || currentUser.role === 'mod') {
+          // TÍNH NĂNG NẠP TIỀN / TRỪ TIỀN CHO KHÁCH HÀNG TÙY BIẾN
+          item.querySelector('.money-btn').addEventListener('click', () => {
+              const inputTien = prompt(`Nhập số tiền muốn biến động cho ví của [${userData.username}]:\n(Ví dụ: nhập 50000 để CỘNG, hoặc nhập -20000 để TRỪ)`, "0");
+              if(inputTien !== null && !isNaN(parseInt(inputTien))) {
+                  const valueChange = parseInt(inputTien);
+                  const newBalance = uBalance + valueChange;
+                  if (newBalance < 0) return alert("Thao tác thất bại! Số dư sau khi trừ không thể nhỏ hơn 0đ!");
+
+                  update(ref(db, `users/${uid}`), { balance: newBalance }).then(() => {
+                      alert(`Đã xử lý thành công ví [${userData.username}] từ ${uBalance.toLocaleString('vi-VN')}đ -> ${newBalance.toLocaleString('vi-VN')}đ!`);
+                      loadStarredList(); 
+                      document.getElementById('search-btn').click();
+                      sendTelegramAlert(`💵 [BIẾN ĐỘNG VÍ THÀNH VIÊN]\n👮 Người thực hiện: ${currentUser.username}\n👤 Khách hàng: ${userData.username}\n🔄 Biến động: ${valueChange >= 0 ? '+' : ''}${valueChange.toLocaleString('vi-VN')}đ\n💰 Số dư cuối: ${newBalance.toLocaleString('vi-VN')}đ`);
+                  });
+              }
+          });
+
           item.querySelector('.ban-btn').addEventListener('click', () => {
               update(ref(db, `users/${uid}`), { isBanned: !isBanned });
               loadStarredList(); document.getElementById('search-btn').click();
@@ -526,7 +565,6 @@
               if(newP) update(ref(db, `users/${uid}`), { password: newP }).then(() => alert("Đã đổi mật khẩu!"));
           });
           
-          // CÀI ĐẶT AUTO REPLY CHO TÀI KHOẢN ĐỐI TÁC
           item.querySelector('.autorep-btn').addEventListener('click', () => {
               const text = prompt(`Nhập nội dung tin nhắn tự động trả lời cho [${userData.username}] (Để trống để Tắt):`);
               update(ref(db, `users/${uid}`), { autoReply: text ? text.trim() : null }).then(() => {
@@ -534,12 +572,11 @@
               });
           });
           
-          // SỰ KIỆN XÓA TÀI KHOẢN TỐI CAO
           item.querySelector('.delete-user-btn').addEventListener('click', () => {
-              const xacNhanXoa = confirm(`⚠️ CẢNH BÁO NGUY HIỂM ⚠️\nBạn có chắc chắn muốn XÓA HOÀN TOÀN tài khoản [${userData.username}] ra khỏi cơ sở dữ liệu hệ thống? Hành động này không thể hoàn tác!`);
+              const xacNhanXoa = confirm(`⚠️ CẢNH BÁO NGUY HIỂM ⚠️\nBạn có chắc chắn muốn XÓA HOÀN TOÀN tài khoản [${userData.username}] ra khỏi hệ thống?`);
               if(xacNhanXoa) {
                   set(ref(db, `users/${uid}`), null).then(() => {
-                      alert(`Đã xóa vĩnh viễn tài khoản [${userData.username}] khỏi hệ thống.`);
+                      alert(`Đã xóa vĩnh viễn tài khoản [${userData.username}].`);
                       loadStarredList(); 
                       document.getElementById('search-btn').click();
                       sendTelegramAlert(`🗑️ [HỆ THỐNG XÓA TÀI KHOẢN]\n👮 Người thực hiện: ${currentUser.username}\n❌ Tài khoản bị xóa: ${userData.username}`);
@@ -548,15 +585,6 @@
           });
 
           if(currentUser.role === 'admin') {
-              item.querySelector('.money-btn').addEventListener('click', () => {
-                  const luongTien = prompt(`Nhập số tiền mới cho ví [${userData.username}]:`, uBalance);
-                  if(luongTien !== null && !isNaN(parseInt(luongTien))) {
-                      update(ref(db, `users/${uid}`), { balance: parseInt(luongTien) }).then(() => {
-                          alert("Cập nhật tiền thành công!");
-                          loadStarredList(); document.getElementById('search-btn').click();
-                      });
-                  }
-              });
               item.querySelector('.role-btn').addEventListener('click', () => {
                   const targetRole = isTargetMod ? 'user' : 'mod';
                   update(ref(db, `users/${uid}`), { role: targetRole }).then(() => {
