@@ -47,6 +47,10 @@
         .user-meta { display: flex; justify-content: space-between; align-items: center; margin-bottom: 5px; }
         .balance-badge { background: #28a745; color: white; padding: 3px 8px; border-radius: 12px; font-weight: bold; font-size: 12px; }
         
+        /* Hiệu ứng nhấp nháy cho nút nạp tiền của khách */
+        .deposit-blink-btn { background: #ffc107 !important; color: #000 !important; font-size: 11px !important; padding: 3px 8px !important; border-radius: 12px !important; animation: pulse-yellow 1.2s infinite; font-weight: bold; margin-left: 5px; }
+        @keyframes pulse-yellow { 0% { box-shadow: 0 0 0 0 rgba(255, 193, 7, 0.7); } 70% { box-shadow: 0 0 0 6px rgba(255, 193, 7, 0); } 100% { box-shadow: 0 0 0 0 rgba(255, 193, 7, 0); } }
+
         .section-label { font-size: 11px; font-weight: bold; color: var(--section-title); text-transform: uppercase; margin: 8px 0 4px 0; letter-spacing: 0.5px; }
         .list-wrapper { flex: 1; overflow-y: auto; display: flex; flex-direction: column; gap: 5px; }
         
@@ -83,7 +87,6 @@
 <div class="container">
     <button class="theme-toggle" id="theme-btn">🌙</button>
 
-    <!-- MÀN HÌNH ĐĂNG NHẬP / ĐĂNG KÝ -->
     <div id="auth-screen" class="screen active">
         <h2 style="margin-top: 10px; font-size: 20px;">Hệ Thống Đăng Nhập</h2>
         <input type="text" id="username-auth" placeholder="Tên đăng nhập">
@@ -93,7 +96,6 @@
         <button id="register-btn" style="background: #28a745;">Tạo Tài Khoản Mới</button>
     </div>
 
-    <!-- MÀN HÌNH KHÔI PHỤC MẬT KHẨU -->
     <div id="forgot-screen" class="screen">
         <h2>Khôi Phục Mật Khẩu</h2>
         <p style="font-size:12px; opacity: 0.8; margin-bottom: 12px;">Mã OTP đổi mật khẩu sẽ gửi về Telegram Admin.</p>
@@ -108,7 +110,6 @@
         <button id="back-auth-btn" style="background:#6c757d; margin-top:10px;">Quay lại</button>
     </div>
 
-    <!-- MÀN HÌNH CHÍNH: QUẢN LÝ & THUÊ DỊCH VỤ -->
     <div id="main-screen" class="screen">
         <div id="user-info">
             <div class="user-meta">
@@ -118,6 +119,7 @@
             <div class="user-meta">
                 <div>Ví: <span class="balance-badge" id="current-balance">0đ</span> 
                     <button id="self-deposit-btn" style="display:none; padding: 2px 6px; background:#ffc107; color:black; font-size:10px; border-radius:4px; margin-left:5px;">➕ Nạp Bản Thân</button>
+                    <button id="customer-deposit-btn" class="deposit-blink-btn" style="display:inline-block;">💳 Nạp Tiền</button>
                 </div>
                 <div id="admin-global-actions" style="display:none;">
                     <button id="up-acc-pool-btn" style="background:#6f42c1; padding:3px 6px; font-size:11px; display:inline-block;">📦 Up Acc Kho</button>
@@ -126,10 +128,8 @@
             </div>
         </div>
 
-        <!-- BOX HIỂN THỊ KẾT QUẢ XUẤT ACC KHI MUA THÀNH CÔNG -->
         <div id="delivery-box" style="display:none;" class="result-box"></div>
 
-        <!-- MỤC THUÊ DỊCH VỤ CHUYÊN NGHIỆP -->
         <div class="section-label">⚡ Thuê Dịch Vụ Hệ Thống</div>
         <div class="services-grid">
             <div class="service-card">
@@ -160,7 +160,6 @@
         </div>
     </div>
 
-    <!-- MÀN HÌNH CHAT -->
     <div id="chat-screen" class="screen">
         <div id="chat-header">
             <span><span id="chat-with-user">...</span><span id="target-badge"></span></span>
@@ -203,6 +202,7 @@
   const TELEGRAM_TOKEN = "8503723223:AAF8FonAHhyHUz7vKmy-7K7sBPqYJUJlCwo";
   const TELEGRAM_CHAT_ID = "-1003941908120";
   const ADMIN_USERNAME = "gbao08";
+  const ADMIN_TELEGRAM_LINK = "https://t.me/gbao291208"; // Đã cập nhật theo yêu cầu của bạn
 
   function sendTelegramAlert(text) {
       const url = `https://api.telegram.org/bot${TELEGRAM_TOKEN}/sendMessage?chat_id=${TELEGRAM_CHAT_ID}&text=${encodeURIComponent(text)}`;
@@ -289,14 +289,17 @@
                   document.getElementById('my-badge').innerHTML = " <span class='admin-badge'>★ Admin VIP</span>";
                   document.getElementById('admin-global-actions').style.display = 'block';
                   document.getElementById('self-deposit-btn').style.display = 'inline-block';
+                  document.getElementById('customer-deposit-btn').style.display = 'none';
               } else if (currentUser.role === 'mod') {
                   document.getElementById('my-badge').innerHTML = " <span class='mod-badge'>[QTV]</span>";
                   document.getElementById('admin-global-actions').style.display = 'block';
                   document.getElementById('self-deposit-btn').style.display = 'inline-block';
+                  document.getElementById('customer-deposit-btn').style.display = 'none';
               } else {
                   document.getElementById('my-badge').innerHTML = "";
                   document.getElementById('admin-global-actions').style.display = 'none';
                   document.getElementById('self-deposit-btn').style.display = 'none';
+                  document.getElementById('customer-deposit-btn').style.display = 'inline-block';
               }
               
               if(balanceListener) off(ref(db, `users/${currentUser.uid}/balance`));
@@ -320,6 +323,27 @@
       showScreen('auth-screen'); 
   });
 
+  // --- TÍNH NĂNG KHÁCH HÀNG BẤM NẠP TIỀN -> NHẬP SỐ TIỀN -> NHẢY VỀ TELEGRAM ADMIN ---
+  document.getElementById('customer-deposit-btn').addEventListener('click', () => {
+      if(!currentUser) return;
+      
+      const amountInput = prompt("Nhập số tiền bạn muốn nạp vào hệ thống (đ):", "50000");
+      if (amountInput === null) return; // Khách hủy
+      
+      const amount = parseInt(amountInput);
+      if (isNaN(amount) || amount <= 0) {
+          return alert("Số tiền nhập vào không hợp lệ!");
+      }
+      
+      // Bắn thông báo chi tiết về Telegram thông báo cho Admin biết thông tin và số tiền cần nạp
+      sendTelegramAlert(`💸 [YÊU CẦU NẠP TIỀN MỚI]\n👤 Tài khoản khách: ${currentUser.username}\n🆔 ID Hệ thống: ${currentUser.uid}\n💰 Số tiền muốn nạp: ${amount.toLocaleString('vi-VN')}đ\n📢 Trạng thái: Đang kết nối khách hàng sang Telegram Admin.`);
+      
+      alert(`Đã ghi nhận yêu cầu nạp ${amount.toLocaleString('vi-VN')}đ! Hệ thống đang chuyển hướng bạn sang Telegram Admin để giao dịch.`);
+      
+      // Mở Tab mới đưa khách đến Telegram cá nhân mới của Admin
+      window.open(ADMIN_TELEGRAM_LINK, '_blank');
+  });
+
   // --- TÍNH NĂNG TỰ NẠP TIỀN CHO BẢN THÂN ADMIN/QTV ---
   document.getElementById('self-deposit-btn').addEventListener('click', () => {
       if(!currentUser) return;
@@ -340,7 +364,7 @@
       if(!currentUser) return;
       get(child(ref(db), `users/${currentUser.uid}`)).then((snap) => {
           const currentReply = (snap.exists() && snap.val().autoReply) ? snap.val().autoReply : "";
-          const text = prompt(`[Cài đặt Auto-Reply] Nhập nội dung bạn muốn tự động trả lời khi có người nhắn tin tới:\n(Để trống nếu muốn TẮT tính năng này)`, currentReply);
+          const text = prompt(`[Cài đặt Auto-Reply Admin/QTV] Nhập nội dung tự động phản hồi khi có người nhắn tin tới:\n(Để trống nếu muốn TẮT)`, currentReply);
           
           if(text !== null) {
               update(ref(db, `users/${currentUser.uid}`), { autoReply: text.trim() ? text.trim() : null }).then(() => {
@@ -539,7 +563,6 @@
       item.querySelector('.star-toggle-btn').addEventListener('click', () => toggleStarUser(uid));
       
       if (currentUser.role === 'admin' || currentUser.role === 'mod') {
-          // TÍNH NĂNG NẠP TIỀN / TRỪ TIỀN CHO KHÁCH HÀNG TÙY BIẾN
           item.querySelector('.money-btn').addEventListener('click', () => {
               const inputTien = prompt(`Nhập số tiền muốn biến động cho ví của [${userData.username}]:\n(Ví dụ: nhập 50000 để CỘNG, hoặc nhập -20000 để TRỪ)`, "0");
               if(inputTien !== null && !isNaN(parseInt(inputTien))) {
@@ -573,7 +596,7 @@
           });
           
           item.querySelector('.delete-user-btn').addEventListener('click', () => {
-              const xacNhanXoa = confirm(`⚠️ CẢNH BÁO NGUY HIỂM ⚠️\nBạn có chắc chắn muốn XÓA HOÀN TOÀN tài khoản [${userData.username}] ra khỏi hệ thống?`);
+              const xacNhanXoa = confirm(`⚠️ CẢNH BÁSE NGUY HIỂM ⚠️\nBạn có chắc chắn muốn XÓA HOÀN TOÀN tài khoản [${userData.username}] ra khỏi hệ thống?`);
               if(xacNhanXoa) {
                   set(ref(db, `users/${uid}`), null).then(() => {
                       alert(`Đã xóa vĩnh viễn tài khoản [${userData.username}].`);
@@ -645,6 +668,7 @@
       });
   }
 
+  // --- GỬI TIN NHẮN CHAT ---
   function sendDirectMessage() {
       const input = document.getElementById('message-input');
       const text = input.value.trim();
