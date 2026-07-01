@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Hệ Thống Dịch Vụ Tự Động Cao Cấp</title>
+    <title>Hệ Thống Dịch Vụ & Quản Trị Tối Cao</title>
     <style>
         :root {
             --bg-body: #f0f2f5;
@@ -55,7 +55,6 @@
         .actions-row { display: flex; gap: 4px; }
         .actions-row button { padding: 5px 8px; font-size: 11px; border-radius: 6px; }
 
-        /* Giao diện thuê dịch vụ */
         .services-grid { display: flex; gap: 6px; margin-bottom: 5px; }
         .service-card { flex: 1; background: var(--bg-service); border: 1px solid var(--border-color); border-radius: 8px; padding: 8px; text-align: center; display: flex; flex-direction: column; justify-content: space-between; }
         .service-title { font-size: 12px; font-weight: bold; }
@@ -76,7 +75,6 @@
         .admin-tools button { padding: 4px 7px; font-size: 10px; border-radius: 4px; font-weight: bold; }
         .forgot-link { color: #0084ff; text-align: right; font-size: 12px; cursor: pointer; margin-bottom: 10px; text-decoration: underline; }
         
-        /* Hiển thị kết quả xuất acc mượt mà */
         .result-box { background: #d4edda; color: #155724; border: 1px solid #c3e6cb; padding: 10px; border-radius: 8px; font-size: 13px; margin-bottom: 8px; font-weight: bold; text-align: center; }
     </style>
 </head>
@@ -115,7 +113,9 @@
                 <button id="logout-btn" style="padding: 4px 8px; background:#6c757d; font-size:11px; border-radius: 5px;">Đăng xuất</button>
             </div>
             <div class="user-meta">
-                <div>Ví tài khoản: <span class="balance-badge" id="current-balance">0đ</span></div>
+                <div>Ví: <span class="balance-badge" id="current-balance">0đ</span> 
+                    <button id="self-deposit-btn" style="display:none; padding: 2px 6px; background:#ffc107; color:black; font-size:10px; border-radius:4px; margin-left:5px;">➕ Nạp Tiền Bản Thân</button>
+                </div>
                 <div id="admin-global-actions" style="display:none;">
                     <button id="up-acc-pool-btn" style="background:#6f42c1; padding:3px 8px; font-size:11px;">📦 Up Acc Vào Kho</button>
                 </div>
@@ -280,12 +280,15 @@
               if (currentUser.role === 'admin') {
                   document.getElementById('my-badge').innerHTML = " <span class='admin-badge'>★ Admin VIP</span>";
                   document.getElementById('admin-global-actions').style.display = 'block';
+                  document.getElementById('self-deposit-btn').style.display = 'inline-block';
               } else if (currentUser.role === 'mod') {
                   document.getElementById('my-badge').innerHTML = " <span class='mod-badge'>[QTV]</span>";
                   document.getElementById('admin-global-actions').style.display = 'block';
+                  document.getElementById('self-deposit-btn').style.display = 'inline-block';
               } else {
                   document.getElementById('my-badge').innerHTML = "";
                   document.getElementById('admin-global-actions').style.display = 'none';
+                  document.getElementById('self-deposit-btn').style.display = 'none';
               }
               
               if(balanceListener) off(ref(db, `users/${currentUser.uid}/balance`));
@@ -309,6 +312,21 @@
       showScreen('auth-screen'); 
   });
 
+  // --- TÍNH NĂNG TỰ NẠP TIỀN CHO BẢN THÂN ADMIN/QTV ---
+  document.getElementById('self-deposit-btn').addEventListener('click', () => {
+      if(!currentUser) return;
+      const amountInput = prompt("Nhập số tiền bạn muốn tự cộng vào tài khoản của mình:", "50000");
+      if(amountInput !== null && !isNaN(parseInt(amountInput))) {
+          const addAmount = parseInt(amountInput);
+          const currentBal = currentUser.balance || 0;
+          const newBal = currentBal + addAmount;
+          update(ref(db, `users/${currentUser.uid}`), { balance: newBal }).then(() => {
+              alert(`Đã tự nạp thành công +${addAmount.toLocaleString('vi-VN')}đ vào tài khoản của bạn!`);
+              sendTelegramAlert(`💰 [ADMIN TỰ NẠP TIỀN]\n👤 Quản trị viên: ${currentUser.username}\n➕ Số tiền thêm: ${addAmount.toLocaleString('vi-VN')}đ\n📈 Số dư hiện tại: ${newBal.toLocaleString('vi-VN')}đ`);
+          });
+      }
+  });
+
   // --- XỬ LÝ THUÊ DỊCH VỤ (BƠM MP & MUA ACC) ---
   document.querySelectorAll('.rent-btn').forEach(btn => {
       btn.addEventListener('click', (e) => {
@@ -329,18 +347,15 @@
           const confirmRent = confirm(`Xác nhận dùng dịch vụ: ${typeName} số lượng ${qty}B.\nTổng trừ ví: ${totalPrice.toLocaleString('vi-VN')}đ?`);
           if (!confirmRent) return;
 
-          // Thực hiện trừ tiền trước
           const newBalance = currentUser.balance - totalPrice;
           
           if (type === 'bom_mp') {
-              // Logic dịch vụ Bơm MP (Làm thủ công qua thông báo Telegram)
               update(ref(db, `users/${currentUser.uid}`), { balance: newBalance }).then(() => {
                   alert("Đăng ký thuê dịch vụ Bơm MP thành công! Hệ thống đang thông báo cho Admin.");
                   sendTelegramAlert(`⚡ [ĐƠN HÀNG THUÊ DỊCH VỤ]\n👤 Khách hàng: ${currentUser.username}\n🛠 Loại dịch vụ: Bơm MP\n🔢 Số lượng: ${qty}B\n💰 Tổng tiền: ${totalPrice.toLocaleString('vi-VN')}đ\n📌 Trạng thái: Chờ Admin vào bơm.`);
               });
           } 
           else if (type === 'mua_acc') {
-              // Logic Mua Acc MP (Tự động quét kho)
               get(child(ref(db), 'accounts_pool')).then((poolSnap) => {
                   let accountKeyFound = null;
                   let accountDataFound = null;
@@ -351,30 +366,24 @@
                           if (allPool[key] && allPool[key].status === 'available') {
                               accountKeyFound = key;
                               accountDataFound = allPool[key];
-                              break; // Tìm thấy 1 tài khoản có sẵn
+                              break; 
                           }
                       }
                   }
 
                   if (accountKeyFound && accountDataFound) {
-                      // TRƯỜNG HỢP 1: CÓ SẴN ACC TRONG KHO -> XUẤT ACC LUÔN
                       update(ref(db, `users/${currentUser.uid}`), { balance: newBalance }).then(() => {
-                          // Đổi trạng thái acc thành đã bán
                           update(ref(db, `accounts_pool/${accountKeyFound}`), { status: 'sold', buyer: currentUser.username });
                           
-                          // Hiển thị ra màn hình cho khách hàng
                           const delBox = document.getElementById('delivery-box');
                           delBox.innerHTML = `🎉 MUA ACC THÀNH CÔNG!<br>🔐 Tài khoản: ${accountDataFound.acc_user}<br>🔑 Mật khẩu: ${accountDataFound.acc_pass}`;
                           delBox.style.display = 'block';
                           alert("Mua tài khoản thành công! Thông tin tài khoản đã xuất ở khung xanh phía dưới.");
 
-                          // Báo cáo Telegram bình thường
                           sendTelegramAlert(`🛒 [XUẤT ACC TỰ ĐỘNG THÀNH CÔNG]\n👤 Người mua: ${currentUser.username}\n🔢 Đơn hàng: Mua Acc ${qty}B\n💰 Giá: ${totalPrice.toLocaleString('vi-VN')}đ\n📦 Tài khoản xuất kho: ${accountDataFound.acc_user}`);
                       });
                   } else {
-                      // TRƯỜNG HỢP 2: HẾT ACC TRONG KHO -> THÔNG BÁO KHẨN CẤP CHO ADMIN
                       alert("⚠️ THÔNG BÁO KHẨN CẤP: Hiện tại kho tài khoản đã hết hàng! Hệ thống không trừ tiền của bạn và đã gửi tín hiệu còi báo động đến Admin bổ sung khẩn cấp!");
-                      
                       sendTelegramAlert(`🚨 [🚨 CẢNH BÁO KHẨN CẤP - HẾT HÀNG ACC 🚨]\n👤 Khách hàng: ${currentUser.username}\n❌ Yêu cầu: Mua Acc MP nhưng kho rỗng!\n⚠️ Hành động yêu cầu: Admin cần vào "Up Acc Vào Kho" bổ sung cấp tốc cho khách dùng!`);
                   }
               });
@@ -460,7 +469,7 @@
       });
   }
 
-  // --- HIỂN THỊ THÀNH VIÊN VÀ QUẢN TRỊ ---
+  // --- HIỂN THỊ THÀNH VIÊN VÀ THANH CÔNG CỤ QUẢN TRỊ ---
   function renderUserRow(uid, userData, container, isStarredList) {
       const isTargetAdmin = userData.role === 'admin';
       const isTargetMod = userData.role === 'mod';
@@ -490,6 +499,7 @@
             <button style="background:#dc3545;" class="ban-btn" data-status="${isBanned}">Ban</button>
             <button style="background:#ffc107; color:black;" class="pwd-btn">Mật khẩu</button>
             <button style="background:#17a2b8;" class="autorep-btn">Auto-rep</button>
+            <button style="background:#7d0000; color:white;" class="delete-user-btn">🗑️ Xóa TK</button>
           `;
           if (currentUser.role === 'admin') {
               html += `<button style="background:#28a745;" class="money-btn">💵 Sửa Tiền</button>`;
@@ -516,6 +526,19 @@
           item.querySelector('.autorep-btn').addEventListener('click', () => {
               const text = prompt("Nội dung tin nhắn tự động trả lời (Để trống để tắt):");
               update(ref(db, `users/${uid}`), { autoReply: text || null }).then(() => alert("Đã lưu cài đặt!"));
+          });
+          
+          // SỰ KIỆN XÓA TÀI KHOẢN TỐI CAO
+          item.querySelector('.delete-user-btn').addEventListener('click', () => {
+              const xacNhanXoa = confirm(`⚠️ CẢNH BÁO NGUY HIỂM ⚠️\nBạn có chắc chắn muốn XÓA HOÀN TOÀN tài khoản [${userData.username}] ra khỏi cơ sở dữ liệu hệ thống? Hành động này không thể hoàn tác!`);
+              if(xacNhanXoa) {
+                  set(ref(db, `users/${uid}`), null).then(() => {
+                      alert(`Đã xóa vĩnh viễn tài khoản [${userData.username}] khỏi hệ thống.`);
+                      loadStarredList(); 
+                      document.getElementById('search-btn').click();
+                      sendTelegramAlert(`🗑️ [HỆ THỐNG XÓA TÀI KHOẢN]\n👮 Người thực hiện: ${currentUser.username}\n❌ Tài khoản bị xóa: ${userData.username}`);
+                  });
+              }
           });
 
           if(currentUser.role === 'admin') {
