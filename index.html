@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Hệ Thống Chat & Ví Điện Tử Dịch Vụ</title>
+    <title>Hệ Thống Dịch Vụ Tự Động Cao Cấp</title>
     <style>
         :root {
             --bg-body: #f0f2f5;
@@ -29,16 +29,18 @@
         }
         
         body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background: var(--bg-body); color: var(--text-color); display: flex; justify-content: center; align-items: center; height: 100vh; margin: 0; transition: background 0.3s; }
-        .container { width: 430px; height: 640px; background: var(--bg-container); border-radius: 12px; box-shadow: 0 8px 24px rgba(0,0,0,0.15); display: flex; flex-direction: column; overflow: hidden; position: relative; transition: background 0.3s; }
+        .container { width: 450px; height: 680px; background: var(--bg-container); border-radius: 12px; box-shadow: 0 8px 24px rgba(0,0,0,0.15); display: flex; flex-direction: column; overflow: hidden; position: relative; transition: background 0.3s; }
         .screen { display: none; flex-direction: column; height: 100%; padding: 15px; box-sizing: border-box; }
         .active { display: flex; }
         
-        input, select { padding: 10px; margin-bottom: 8px; border: 1px solid var(--border-color); border-radius: 8px; outline: none; background: var(--input-bg); color: var(--text-color); font-size: 14px; }
+        input, select { padding: 9px; margin-bottom: 8px; border: 1px solid var(--border-color); border-radius: 8px; outline: none; background: var(--input-bg); color: var(--text-color); font-size: 14px; }
         button { padding: 10px; background: #0084ff; color: white; border: none; border-radius: 8px; cursor: pointer; font-weight: bold; font-size: 13px; transition: background 0.2s; }
         button:hover { background: #0066cc; }
         
         .theme-toggle { position: absolute; top: 12px; right: 12px; background: none; border: none; font-size: 18px; cursor: pointer; z-index: 10; padding: 0; width: auto; }
+        
         .admin-badge { color: #ffca28; font-weight: bold; text-shadow: 0 0 5px #fffa65; animation: blink 1.5s infinite; margin-left: 4px; }
+        .mod-badge { color: #00dbde; font-weight: bold; text-shadow: 0 0 5px #fc00ff; margin-left: 4px; font-size: 12px; }
         @keyframes blink { 0%, 100% { opacity: 0.7; } 50% { opacity: 1; } }
 
         #user-info { font-size: 14px; margin-bottom: 10px; border-bottom: 1px solid var(--border-color); padding-bottom: 8px; }
@@ -53,12 +55,12 @@
         .actions-row { display: flex; gap: 4px; }
         .actions-row button { padding: 5px 8px; font-size: 11px; border-radius: 6px; }
 
-        /* Giao diện mua dịch vụ */
+        /* Giao diện thuê dịch vụ */
         .services-grid { display: flex; gap: 6px; margin-bottom: 5px; }
         .service-card { flex: 1; background: var(--bg-service); border: 1px solid var(--border-color); border-radius: 8px; padding: 8px; text-align: center; display: flex; flex-direction: column; justify-content: space-between; }
         .service-title { font-size: 12px; font-weight: bold; }
-        .service-price { font-size: 13px; color: #dc3545; font-weight: bold; margin: 4px 0; }
-        .service-card button { padding: 4px; font-size: 11px; width: 100%; }
+        .service-price { font-size: 13px; color: #28a745; font-weight: bold; margin: 4px 0; }
+        .service-card button { padding: 5px; font-size: 11px; width: 100%; margin-top: 4px; }
 
         #chat-header { font-weight: bold; padding-bottom: 8px; border-bottom: 1px solid var(--border-color); display: flex; justify-content: space-between; align-items: center; }
         #messages { flex: 1; padding: 10px 0; overflow-y: auto; display: flex; flex-direction: column; gap: 8px; }
@@ -71,8 +73,11 @@
         #send-btn { border-radius: 20px; padding: 0 15px; }
 
         .admin-tools { background: #fff3cd; color: #333; padding: 6px; border-radius: 6px; border: 1px dashed #ffc107; margin-top: 3px; display: flex; flex-wrap: wrap; gap: 4px; font-size: 11px; }
-        .admin-tools button { padding: 3px 6px; font-size: 10px; border-radius: 4px; }
+        .admin-tools button { padding: 4px 7px; font-size: 10px; border-radius: 4px; font-weight: bold; }
         .forgot-link { color: #0084ff; text-align: right; font-size: 12px; cursor: pointer; margin-bottom: 10px; text-decoration: underline; }
+        
+        /* Hiển thị kết quả xuất acc mượt mà */
+        .result-box { background: #d4edda; color: #155724; border: 1px solid #c3e6cb; padding: 10px; border-radius: 8px; font-size: 13px; margin-bottom: 8px; font-weight: bold; text-align: center; }
     </style>
 </head>
 <body>
@@ -91,7 +96,7 @@
 
     <div id="forgot-screen" class="screen">
         <h2>Khôi Phục Mật Khẩu</h2>
-        <p style="font-size:12px; opacity: 0.8; margin-bottom: 12px;">Mã OTP xác minh đổi mật khẩu sẽ được gửi trực tiếp về Telegram của Admin.</p>
+        <p style="font-size:12px; opacity: 0.8; margin-bottom: 12px;">Mã OTP đổi mật khẩu sẽ gửi về Telegram Admin.</p>
         <input type="text" id="forgot-username" placeholder="Nhập tên đăng nhập cần khôi phục">
         <button id="send-otp-btn">Gửi yêu cầu lấy mã OTP</button>
         
@@ -111,41 +116,41 @@
             </div>
             <div class="user-meta">
                 <div>Ví tài khoản: <span class="balance-badge" id="current-balance">0đ</span></div>
+                <div id="admin-global-actions" style="display:none;">
+                    <button id="up-acc-pool-btn" style="background:#6f42c1; padding:3px 8px; font-size:11px;">📦 Up Acc Vào Kho</button>
+                </div>
             </div>
         </div>
 
-        <div class="section-label">🛒 Mua Gói Dịch Vụ Web</div>
+        <div id="delivery-box" style="display:none;" class="result-box"></div>
+
+        <div class="section-label">⚡ Thuê Dịch Vụ Hệ Thống</div>
         <div class="services-grid">
             <div class="service-card">
-                <span class="service-title">Gói Ngày</span>
-                <span class="service-price">10.000đ</span>
-                <button class="buy-srv-btn" data-name="Gói Ngày" data-price="10000">Mua ngay</button>
+                <span class="service-title">🔥 Bơm MP</span>
+                <span class="service-price">250đ / 1B</span>
+                <button class="rent-btn" data-type="bom_mp" data-price="250" style="background:#0084ff;">Thuê ngay</button>
             </div>
             <div class="service-card">
-                <span class="service-title">Gói Tuần</span>
-                <span class="service-price">50.000đ</span>
-                <button class="buy-srv-btn" data-name="Gói Tuần" data-price="50000" style="background:#28a745;">Mua ngay</button>
-            </div>
-            <div class="service-card">
-                <span class="service-title">VIP Tháng</span>
-                <span class="service-price">150.000đ</span>
-                <button class="buy-srv-btn" data-name="VIP Tháng" data-price="150000" style="background:#6f42c1;">Mua ngay</button>
+                <span class="service-title">🛒 Mua Acc MP</span>
+                <span class="service-price">120đ / 1B</span>
+                <button class="rent-btn" data-type="mua_acc" data-price="120" style="background:#e0a800; color:black;">Mua ngay</button>
             </div>
         </div>
         
         <div style="display: flex; gap: 5px; margin-top: 5px;">
-            <input type="text" id="search-input" placeholder="Tìm tên đối tác chính xác..." style="flex:1; margin:0; padding:8px;">
-            <button id="search-btn" style="padding: 0 12px;">Tìm kiếm</button>
+            <input type="text" id="search-input" placeholder="Tìm tên đối tác..." style="flex:1; margin:0; padding:8px;">
+            <button id="search-btn" style="padding: 0 12px;">Tìm</button>
         </div>
 
         <div class="section-label">⭐ Danh sách chú ý (Truy cập nhanh)</div>
-        <div id="starred-list" class="list-wrapper" style="max-height: 140px; min-height: 45px; border-bottom: 1px dashed var(--border-color); padding-bottom: 3px;">
+        <div id="starred-list" class="list-wrapper" style="max-height: 120px; min-height: 45px; border-bottom: 1px dashed var(--border-color); padding-bottom: 3px;">
             <div style="font-size:12px; opacity:0.5; text-align:center; padding-top:8px;">Chưa có ai trong mục chú ý.</div>
         </div>
 
         <div class="section-label">🔍 Kết quả tìm kiếm</div>
         <div id="search-results" class="list-wrapper">
-            <div style="font-size:12px; opacity:0.5; text-align:center; padding-top:10px;">Tìm kiếm người dùng để bắt đầu trò chuyện.</div>
+            <div style="font-size:12px; opacity:0.5; text-align:center; padding-top:10px;">Tìm kiếm người dùng để bắt đầu trò chuyện hoặc cộng tiền.</div>
         </div>
     </div>
 
@@ -271,9 +276,18 @@
               const uData = snap.val();
               currentUser = { uid: cleanKey, username: uData.username, role: uData.role || 'user' };
               document.getElementById('current-username').innerText = currentUser.username;
-              document.getElementById('my-badge').innerHTML = currentUser.role === 'admin' ? " <span class='admin-badge'>★ Admin VIP</span>" : "";
               
-              // Lắng nghe số dư thời gian thực
+              if (currentUser.role === 'admin') {
+                  document.getElementById('my-badge').innerHTML = " <span class='admin-badge'>★ Admin VIP</span>";
+                  document.getElementById('admin-global-actions').style.display = 'block';
+              } else if (currentUser.role === 'mod') {
+                  document.getElementById('my-badge').innerHTML = " <span class='mod-badge'>[QTV]</span>";
+                  document.getElementById('admin-global-actions').style.display = 'block';
+              } else {
+                  document.getElementById('my-badge').innerHTML = "";
+                  document.getElementById('admin-global-actions').style.display = 'none';
+              }
+              
               if(balanceListener) off(ref(db, `users/${currentUser.uid}/balance`));
               balanceListener = onValue(ref(db, `users/${currentUser.uid}/balance`), (bSnap) => {
                   const bal = bSnap.val() || 0;
@@ -295,26 +309,94 @@
       showScreen('auth-screen'); 
   });
 
-  // --- MUA DỊCH VỤ TRỪ TIỀN ---
-  document.querySelectorAll('.buy-srv-btn').forEach(btn => {
+  // --- XỬ LÝ THUÊ DỊCH VỤ (BƠM MP & MUA ACC) ---
+  document.querySelectorAll('.rent-btn').forEach(btn => {
       btn.addEventListener('click', (e) => {
-          const srvName = e.target.getAttribute('data-name');
-          const srvPrice = parseInt(e.target.getAttribute('data-price'));
+          const type = e.target.getAttribute('data-type');
+          const unitPrice = parseInt(e.target.getAttribute('data-price'));
+          const typeName = type === 'bom_mp' ? "Bơm MP" : "Mua Acc MP";
 
-          if(!currentUser) return;
-          if(currentUser.balance < srvPrice) {
-              return alert(`Số dư không đủ! Bạn cần ${srvPrice.toLocaleString('vi-VN')}đ nhưng hiện chỉ có ${currentUser.balance.toLocaleString('vi-VN')}đ.`);
+          const qtyInput = prompt(`Nhập số lượng B bạn muốn mua/thuê cho [${typeName}]:`, "1");
+          if (!qtyInput) return;
+          const qty = parseInt(qtyInput);
+          if (isNaN(qty) || qty <= 0) return alert("Số lượng không hợp lệ!");
+
+          const totalPrice = unitPrice * qty;
+          if (currentUser.balance < totalPrice) {
+              return alert(`Số dư tài khoản không đủ! Chi phí là ${totalPrice.toLocaleString('vi-VN')}đ.`);
           }
 
-          const xacNhan = confirm(`Bạn có chắc muốn mua [${srvName}] với giá ${srvPrice.toLocaleString('vi-VN')}đ chứ?`);
-          if(xacNhan) {
-              const newBalance = currentUser.balance - srvPrice;
+          const confirmRent = confirm(`Xác nhận dùng dịch vụ: ${typeName} số lượng ${qty}B.\nTổng trừ ví: ${totalPrice.toLocaleString('vi-VN')}đ?`);
+          if (!confirmRent) return;
+
+          // Thực hiện trừ tiền trước
+          const newBalance = currentUser.balance - totalPrice;
+          
+          if (type === 'bom_mp') {
+              // Logic dịch vụ Bơm MP (Làm thủ công qua thông báo Telegram)
               update(ref(db, `users/${currentUser.uid}`), { balance: newBalance }).then(() => {
-                  alert(`Mua thành công gói ${srvName}! Hệ thống đang kích hoạt.`);
-                  // Bắn thông báo về Telegram
-                  sendTelegramAlert(`🛒 [ĐƠN HÀNG MỚI]\n👤 Khách hàng: ${currentUser.username}\n📦 Dịch vụ: ${srvName}\n💰 Giá: ${srvPrice.toLocaleString('vi-VN')}đ\n📉 Số dư còn lại: ${newBalance.toLocaleString('vi-VN')}đ`);
+                  alert("Đăng ký thuê dịch vụ Bơm MP thành công! Hệ thống đang thông báo cho Admin.");
+                  sendTelegramAlert(`⚡ [ĐƠN HÀNG THUÊ DỊCH VỤ]\n👤 Khách hàng: ${currentUser.username}\n🛠 Loại dịch vụ: Bơm MP\n🔢 Số lượng: ${qty}B\n💰 Tổng tiền: ${totalPrice.toLocaleString('vi-VN')}đ\n📌 Trạng thái: Chờ Admin vào bơm.`);
+              });
+          } 
+          else if (type === 'mua_acc') {
+              // Logic Mua Acc MP (Tự động quét kho)
+              get(child(ref(db), 'accounts_pool')).then((poolSnap) => {
+                  let accountKeyFound = null;
+                  let accountDataFound = null;
+
+                  if (poolSnap.exists()) {
+                      const allPool = poolSnap.val();
+                      for (let key in allPool) {
+                          if (allPool[key] && allPool[key].status === 'available') {
+                              accountKeyFound = key;
+                              accountDataFound = allPool[key];
+                              break; // Tìm thấy 1 tài khoản có sẵn
+                          }
+                      }
+                  }
+
+                  if (accountKeyFound && accountDataFound) {
+                      // TRƯỜNG HỢP 1: CÓ SẴN ACC TRONG KHO -> XUẤT ACC LUÔN
+                      update(ref(db, `users/${currentUser.uid}`), { balance: newBalance }).then(() => {
+                          // Đổi trạng thái acc thành đã bán
+                          update(ref(db, `accounts_pool/${accountKeyFound}`), { status: 'sold', buyer: currentUser.username });
+                          
+                          // Hiển thị ra màn hình cho khách hàng
+                          const delBox = document.getElementById('delivery-box');
+                          delBox.innerHTML = `🎉 MUA ACC THÀNH CÔNG!<br>🔐 Tài khoản: ${accountDataFound.acc_user}<br>🔑 Mật khẩu: ${accountDataFound.acc_pass}`;
+                          delBox.style.display = 'block';
+                          alert("Mua tài khoản thành công! Thông tin tài khoản đã xuất ở khung xanh phía dưới.");
+
+                          // Báo cáo Telegram bình thường
+                          sendTelegramAlert(`🛒 [XUẤT ACC TỰ ĐỘNG THÀNH CÔNG]\n👤 Người mua: ${currentUser.username}\n🔢 Đơn hàng: Mua Acc ${qty}B\n💰 Giá: ${totalPrice.toLocaleString('vi-VN')}đ\n📦 Tài khoản xuất kho: ${accountDataFound.acc_user}`);
+                      });
+                  } else {
+                      // TRƯỜNG HỢP 2: HẾT ACC TRONG KHO -> THÔNG BÁO KHẨN CẤP CHO ADMIN
+                      alert("⚠️ THÔNG BÁO KHẨN CẤP: Hiện tại kho tài khoản đã hết hàng! Hệ thống không trừ tiền của bạn và đã gửi tín hiệu còi báo động đến Admin bổ sung khẩn cấp!");
+                      
+                      sendTelegramAlert(`🚨 [🚨 CẢNH BÁO KHẨN CẤP - HẾT HÀNG ACC 🚨]\n👤 Khách hàng: ${currentUser.username}\n❌ Yêu cầu: Mua Acc MP nhưng kho rỗng!\n⚠️ Hành động yêu cầu: Admin cần vào "Up Acc Vào Kho" bổ sung cấp tốc cho khách dùng!`);
+                  }
               });
           }
+      });
+  });
+
+  // --- ADMIN/QTV UP ACC VÀO KHO HÀNG ---
+  document.getElementById('up-acc-pool-btn').addEventListener('click', () => {
+      const accUser = prompt("Nhập Tên tài khoản cần bổ sung vào kho:");
+      if (!accUser) return;
+      const accPass = prompt("Nhập Mật khẩu của tài khoản trên:");
+      if (!accPass) return;
+
+      const newAccRef = push(ref(db, 'accounts_pool'));
+      set(newAccRef, {
+          acc_user: accUser,
+          acc_pass: accPass,
+          status: 'available',
+          timestamp: Date.now()
+      }).then(() => {
+          alert("Đã tải tài khoản lên kho dự trữ thành công!");
       });
   });
 
@@ -348,14 +430,14 @@
       showScreen('auth-screen');
   });
 
-  // --- QUẢN LÝ DANH SÁCH CHÚ Ý ---
+  // --- DANH SÁCH CHÚ Ý ---
   function toggleStarUser(targetUid) {
       const starRef = ref(db, `users/${currentUser.uid}/starred/${targetUid}`);
       get(starRef).then((snap) => {
           if(snap.exists()) {
-              set(starRef, null).then(() => { loadStarredList(); alert("Đã xóa khỏi danh sách chú ý!"); });
+              set(starRef, null).then(() => { loadStarredList(); });
           } else {
-              set(starRef, true).then(() => { loadStarredList(); alert("Đã thêm vào danh sách chú ý!"); });
+              set(starRef, true).then(() => { loadStarredList(); });
           }
       });
   }
@@ -369,9 +451,7 @@
               get(child(ref(db), 'users')).then((allUsersSnap) => {
                   const allUsers = allUsersSnap.val();
                   starredKeys.forEach(uid => {
-                      if(allUsers[uid]) {
-                          renderUserRow(uid, allUsers[uid], container, true);
-                      }
+                      if(allUsers[uid]) renderUserRow(uid, allUsers[uid], container, true);
                   });
               });
           } else {
@@ -380,16 +460,22 @@
       });
   }
 
+  // --- HIỂN THỊ THÀNH VIÊN VÀ QUẢN TRỊ ---
   function renderUserRow(uid, userData, container, isStarredList) {
-      const isTargetAdmin = userData.role === 'admin' || userData.username === ADMIN_USERNAME;
+      const isTargetAdmin = userData.role === 'admin';
+      const isTargetMod = userData.role === 'mod';
       const isBanned = userData.isBanned || false;
       const uBalance = userData.balance || 0;
       const item = document.createElement('div');
       item.classList.add('user-item');
 
+      let roleBadge = "";
+      if (isTargetAdmin) roleBadge = "<span class='admin-badge'>★</span>";
+      else if (isTargetMod) roleBadge = "<span class='mod-badge'>[QTV]</span>";
+
       let html = `
         <div class="user-row">
-            <span><strong>${userData.username}</strong> ${isTargetAdmin ? "<span class='admin-badge'>★</span>" : ""} [${uBalance.toLocaleString('vi-VN')}đ] ${isBanned ? '❌' : ''}</span>
+            <span><strong>${userData.username}</strong> ${roleBadge} [${uBalance.toLocaleString('vi-VN')}đ] ${isBanned ? '❌' : ''}</span>
             <div class="actions-row">
                 <button style="background:#6f42c1;" class="star-toggle-btn" data-uid="${uid}">${isStarredList ? '⭐ Hủy' : '⭐ Chú ý'}</button>
                 <button class="start-chat-btn" data-uid="${uid}" data-name="${userData.username}">Chat</button>
@@ -397,48 +483,59 @@
         </div>
       `;
 
-      if (currentUser.role === 'admin') {
+      const khongPhaiChinhMinh = (uid !== currentUser.uid);
+      if ((currentUser.role === 'admin' || currentUser.role === 'mod') && khongPhaiChinhMinh) {
+          html += `<div class="admin-tools"><span>🔧 QTV:</span>`;
           html += `
-            <div class="admin-tools">
-                <span>🔧 QTV:</span>
-                <button style="background:#dc3545;" class="ban-btn" data-uid="${uid}" data-status="${isBanned}">${isBanned ? 'Mở Khóa' : 'Khóa Ban'}</button>
-                <button style="background:#ffc107; color:black;" class="pwd-btn" data-uid="${uid}">Đổi MK</button>
-                <button style="background:#17a2b8;" class="autorep-btn" data-uid="${uid}">Auto-rep</button>
-                <button style="background:#28a745;" class="money-btn" data-uid="${uid}">➕ Sửa Tiền</button>
-            </div>
+            <button style="background:#dc3545;" class="ban-btn" data-status="${isBanned}">Ban</button>
+            <button style="background:#ffc107; color:black;" class="pwd-btn">Mật khẩu</button>
+            <button style="background:#17a2b8;" class="autorep-btn">Auto-rep</button>
           `;
+          if (currentUser.role === 'admin') {
+              html += `<button style="background:#28a745;" class="money-btn">💵 Sửa Tiền</button>`;
+              html += `<button style="background:#bc5100;" class="role-btn">${isTargetMod ? 'Hạ cấp User' : '⚡ Lên QTV'}</button>`;
+          }
+          html += `</div>`;
       }
+      
       item.innerHTML = html;
       container.appendChild(item);
 
       item.querySelector('.start-chat-btn').addEventListener('click', () => startChat(uid, userData.username));
       item.querySelector('.star-toggle-btn').addEventListener('click', () => toggleStarUser(uid));
       
-      if(currentUser.role === 'admin') {
-          item.querySelector('.ban-btn').addEventListener('click', (e) => {
-              update(ref(db, `users/${uid}`), { isBanned: !(e.target.getAttribute('data-status') === 'true') });
+      if (currentUser.role === 'admin' || currentUser.role === 'mod') {
+          item.querySelector('.ban-btn').addEventListener('click', () => {
+              update(ref(db, `users/${uid}`), { isBanned: !isBanned });
               loadStarredList(); document.getElementById('search-btn').click();
           });
           item.querySelector('.pwd-btn').addEventListener('click', () => {
-              const newP = prompt("Đặt lại mật khẩu cho user này:");
-              if(newP) update(ref(db, `users/${uid}`), { password: newP }).then(() => alert("Thành công!"));
+              const newP = prompt(`Thay đổi mật khẩu cho [${userData.username}]:`);
+              if(newP) update(ref(db, `users/${uid}`), { password: newP }).then(() => alert("Đã đổi mật khẩu!"));
           });
           item.querySelector('.autorep-btn').addEventListener('click', () => {
-              const text = prompt("Nội dung auto-reply:");
-              update(ref(db, `users/${uid}`), { autoReply: text || null }).then(() => alert("Thành công!"));
+              const text = prompt("Nội dung tin nhắn tự động trả lời (Để trống để tắt):");
+              update(ref(db, `users/${uid}`), { autoReply: text || null }).then(() => alert("Đã lưu cài đặt!"));
           });
-          item.querySelector('.money-btn').addEventListener('click', () => {
-              const lượngTiền = prompt(`Nhập tổng số tiền mới muốn đặt cho ví của [${userData.username}] (đơn vị VNĐ):`, uBalance);
-              if(lượngTiền !== null) {
-                  const sốTiềnSố = parseInt(lượngTiền);
-                  if(!isNaN(sốTiềnSố)) {
-                      update(ref(db, `users/${uid}`), { balance: sốTiềnSố }).then(() => {
-                          alert("Đã cập nhật số dư thành công!");
+
+          if(currentUser.role === 'admin') {
+              item.querySelector('.money-btn').addEventListener('click', () => {
+                  const luongTien = prompt(`Nhập số tiền mới cho ví [${userData.username}]:`, uBalance);
+                  if(luongTien !== null && !isNaN(parseInt(luongTien))) {
+                      update(ref(db, `users/${uid}`), { balance: parseInt(luongTien) }).then(() => {
+                          alert("Cập nhật tiền thành công!");
                           loadStarredList(); document.getElementById('search-btn').click();
                       });
                   }
-              }
-          });
+              });
+              item.querySelector('.role-btn').addEventListener('click', () => {
+                  const targetRole = isTargetMod ? 'user' : 'mod';
+                  update(ref(db, `users/${uid}`), { role: targetRole }).then(() => {
+                      alert("Thay đổi phân quyền thành công!");
+                      loadStarredList(); document.getElementById('search-btn').click();
+                  });
+              });
+          }
       }
   }
 
@@ -459,12 +556,12 @@
                       count++;
                   }
               }
-              if(count === 0) container.innerHTML = '<div style="font-size:12px; opacity:0.5; text-align:center; padding-top:10px;">Không tìm thấy kết quả nào.</div>';
+              if(count === 0) container.innerHTML = '<div style="font-size:12px; opacity:0.5; text-align:center; padding-top:10px;">Không tìm thấy kết quả.</div>';
           }
       });
   });
 
-  // --- PHÒNG CHAT HAI NGƯỜI ---
+  // --- PHÒNG CHAT ---
   function startChat(targetUid, targetName) {
       get(child(ref(db), `users/${currentUser.uid}`)).then((snap) => {
           if (snap.exists() && snap.val().isBanned === true) return alert("Bạn đang bị khóa tài khoản!");
@@ -506,7 +603,7 @@
           });
           
           if (currentUser.username !== ADMIN_USERNAME && targetChatName === ADMIN_USERNAME) {
-              sendTelegramAlert(`💬 [TIN NHẮN ĐẾN ADMIN]\n👤 Từ khách hàng: ${currentUser.username}\n📝 Nội dung: ${text}`);
+              sendTelegramAlert(`💬 [TIN NHẮN ĐẾN ADMIN]\n👤 Từ: ${currentUser.username}\n📝 Nội dung: ${text}`);
           }
           
           checkAutoReply(targetChatUid);
