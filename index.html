@@ -219,6 +219,7 @@
       }
   });
 
+  // --- LOGIC TRẢ LỜI TỰ ĐỘNG (AUTO REPLY) ---
   function checkAutoReply(targetUid) {
       get(child(ref(db), `users/${targetUid}`)).then((snap) => {
           if (snap.exists() && snap.val().autoReply) {
@@ -391,21 +392,22 @@
       });
   });
 
-  // --- ADMIN/QTV UP ACC VÀO KHO HÀNG ---
+  // --- ADMIN/QTV UP ACC VÀO KHO HÀNG (Tách rõ Tài khoản và Mật khẩu) ---
   document.getElementById('up-acc-pool-btn').addEventListener('click', () => {
-      const accUser = prompt("Nhập Tên tài khoản cần bổ sung vào kho:");
-      if (!accUser) return;
-      const accPass = prompt("Nhập Mật khẩu của tài khoản trên:");
-      if (!accPass) return;
+      const accUser = prompt("Nhập Tên tài khoản (Username) cần bổ sung vào kho:");
+      if (accUser === null || accUser.trim() === "") return alert("Không được bỏ trống tài khoản!");
+      
+      const accPass = prompt("Nhập Mật khẩu (Password) của tài khoản trên:");
+      if (accPass === null || accPass.trim() === "") return alert("Không được bỏ trống mật khẩu!");
 
       const newAccRef = push(ref(db, 'accounts_pool'));
       set(newAccRef, {
-          acc_user: accUser,
-          acc_pass: accPass,
+          acc_user: accUser.trim(),
+          acc_pass: accPass.trim(),
           status: 'available',
           timestamp: Date.now()
       }).then(() => {
-          alert("Đã tải tài khoản lên kho dự trữ thành công!");
+          alert("Đã tải tài khoản và mật khẩu lên kho dự trữ thành công!");
       });
   });
 
@@ -523,9 +525,13 @@
               const newP = prompt(`Thay đổi mật khẩu cho [${userData.username}]:`);
               if(newP) update(ref(db, `users/${uid}`), { password: newP }).then(() => alert("Đã đổi mật khẩu!"));
           });
+          
+          // CÀI ĐẶT AUTO REPLY CHO TÀI KHOẢN ĐỐI TÁC
           item.querySelector('.autorep-btn').addEventListener('click', () => {
-              const text = prompt("Nội dung tin nhắn tự động trả lời (Để trống để tắt):");
-              update(ref(db, `users/${uid}`), { autoReply: text || null }).then(() => alert("Đã lưu cài đặt!"));
+              const text = prompt(`Nhập nội dung tin nhắn tự động trả lời cho [${userData.username}] (Để trống để Tắt):`);
+              update(ref(db, `users/${uid}`), { autoReply: text ? text.trim() : null }).then(() => {
+                  alert(text ? "Đã bật và lưu nội dung Auto-reply!" : "Đã tắt tính năng Auto-reply.");
+              });
           });
           
           // SỰ KIỆN XÓA TÀI KHOẢN TỐI CAO
@@ -626,7 +632,7 @@
           });
           
           if (currentUser.username !== ADMIN_USERNAME && targetChatName === ADMIN_USERNAME) {
-              sendTelegramAlert(`💬 [TIN NHẮN ĐẾN ADMIN]\n👤 Từ: ${currentUser.username}\n📝 Nội dung: ${text}`);
+              sendTelegramAlert(`💬 [TIN NHÂN ĐẾN ADMIN]\n👤 Từ: ${currentUser.username}\n📝 Nội dung: ${text}`);
           }
           
           checkAutoReply(targetChatUid);
