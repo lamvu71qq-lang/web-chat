@@ -3,20 +3,25 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Ứng Dụng Chat Riêng Tư</title>
+    <title>Ứng Dụng Chat Riêng Tư - Quản Trị Viên VIP</title>
     <style>
         body { font-family: Arial, sans-serif; background: #f0f2f5; display: flex; justify-content: center; align-items: center; height: 100vh; margin: 0; }
-        .container { width: 400px; height: 550px; background: white; border-radius: 8px; box-shadow: 0 4px 10px rgba(0,0,0,0.1); display: flex; flex-direction: column; overflow: hidden; }
+        .container { width: 400px; height: 580px; background: white; border-radius: 8px; box-shadow: 0 4px 10px rgba(0,0,0,0.1); display: flex; flex-direction: column; overflow: hidden; position: relative; }
         .screen { display: none; flex-direction: column; height: 100%; padding: 20px; box-sizing: border-box; }
         .active { display: flex; }
-        input { padding: 10px; margin-bottom: 10px; border: 1px solid #ddd; border-radius: 5px; outline: none; }
+        input, select { padding: 10px; margin-bottom: 10px; border: 1px solid #ddd; border-radius: 5px; outline: none; }
         button { padding: 10px; background: #0084ff; color: white; border: none; border-radius: 5px; cursor: pointer; font-weight: bold; }
         button:hover { background: #0066cc; }
         
-        /* Giao diện chính / Tìm kiếm */
-        #user-info { font-weight: bold; margin-bottom: 15px; color: #333; }
+        /* Huy hiệu Admin Ngôi sao */
+        .admin-badge { color: #ffca28; font-weight: bold; text-shadow: 0 0 5px #fffa65; animation: blink 1.5s infinite; margin-left: 4px; }
+        @keyframes blink { 0%, 100% { opacity: 0.6; } 50% { opacity: 1; } }
+
+        /* Giao diện chính */
+        #user-info { font-weight: bold; margin-bottom: 15px; color: #333; display: flex; align-items: center; justify-content: space-between; }
         #search-results { margin-top: 15px; flex: 1; overflow-y: auto; }
-        .user-item { padding: 10px; background: #f8f9fa; border: 1px solid #eee; margin-bottom: 5px; border-radius: 5px; display: flex; justify-content: space-between; align-items: center; }
+        .user-item { padding: 10px; background: #f8f9fa; border: 1px solid #eee; margin-bottom: 5px; border-radius: 5px; display: flex; flex-direction: column; gap: 5px; }
+        .user-row { display: flex; justify-content: space-between; align-items: center; }
 
         /* Giao diện Chat */
         #chat-header { font-weight: bold; padding-bottom: 10px; border-bottom: 1px solid #ddd; display: flex; justify-content: space-between; }
@@ -27,6 +32,12 @@
         #input-area { display: flex; gap: 5px; }
         #message-input { flex: 1; margin: 0; border-radius: 20px; }
         #send-btn { border-radius: 20px; }
+
+        /* Menu Quản trị phụ của Admin */
+        .admin-tools { background: #fff3cd; padding: 5px; border-radius: 5px; border: 1px dashed #ffc107; margin-top: 5px; display: flex; flex-wrap: wrap; gap: 5px; font-size: 12px; }
+        .admin-tools button { padding: 4px 8px; font-size: 11px; }
+
+        .forgot-link { color: #0084ff; text-align: right; font-size: 13px; cursor: pointer; margin-bottom: 15px; text-decoration: underline; }
     </style>
 </head>
 <body>
@@ -35,14 +46,32 @@
     <div id="auth-screen" class="screen active">
         <h2>Đăng Nhập / Đăng Ký</h2>
         <input type="email" id="email-input" placeholder="Email (Ví dụ: user@test.com)">
-        <input type="password" id="password-input" placeholder="Mật khẩu (Ít nhất 6 ký tự)">
+        <input type="password" id="password-input" placeholder="Mật khẩu">
+        <div class="forgot-link" id="go-forgot-btn">Quên mật khẩu?</div>
         <input type="text" id="username-input" placeholder="Tên hiển thị (Khi đăng ký mới)">
         <button id="login-btn" style="margin-bottom: 5px;">Đăng Nhập</button>
         <button id="register-btn" style="background: #28a745;">Đăng Ký Tài Khoản Mới</button>
     </div>
 
+    <div id="forgot-screen" class="screen">
+        <h2>Khôi Phục Mật Khẩu</h2>
+        <p style="font-size:13px; color:#666;">Nhập email, mã OTP sẽ được gửi về Telegram của Admin.</p>
+        <input type="email" id="forgot-email" placeholder="Nhập Email tài khoản cần khôi phục">
+        <button id="send-otp-btn">Gửi mã OTP xác nhận</button>
+        
+        <div id="otp-area" style="display:none; margin-top: 15px; flex-direction: column;">
+            <input type="text" id="otp-input" placeholder="Nhập mã OTP 6 số từ Admin">
+            <input type="password" id="forgot-new-pwd" placeholder="Nhập Mật khẩu mới">
+            <button id="verify-reset-btn" style="background:#28a745;">Đổi Mật Khẩu</button>
+        </div>
+        <button id="back-auth-btn" style="background:#6c757d; margin-top:10px;">Quay lại</button>
+    </div>
+
     <div id="main-screen" class="screen">
-        <div id="user-info">Xin chào: <span id="current-username">...</span></div>
+        <div id="user-info">
+            <div>Xin chào: <span id="current-username">...</span><span id="my-badge"></span></div>
+            <button id="logout-btn" style="padding: 4px 8px; background:#6c757d; font-size:12px;">Đăng xuất</button>
+        </div>
         <input type="text" id="search-input" placeholder="Nhập tên chính xác để tìm...">
         <button id="search-btn">Tìm kiếm người dùng</button>
         <div id="search-results"></div>
@@ -50,7 +79,7 @@
 
     <div id="chat-screen" class="screen">
         <div id="chat-header">
-            <span>Đang chat với: <span id="chat-with-user">...</span></span>
+            <span>Đang chat với: <span id="chat-with-user">...</span><span id="target-badge"></span></span>
             <button id="back-btn" style="padding: 3px 8px; background: #dc3545;">Quay lại</button>
         </div>
         <div id="messages"></div>
@@ -63,10 +92,9 @@
 
 <script type="module">
   import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
-  import { getAuth, createUserWithEmailAndPassword, signInWithEmailAndPassword, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-auth.js";
-  import { getDatabase, ref, set, get, child, push, onChildAdded, off } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-database.js";
+  import { getAuth, createUserWithEmailAndPassword, signInWithEmailAndPassword, onAuthStateChanged, signOut, updatePassword } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-auth.js";
+  import { getDatabase, ref, set, get, child, push, onChildAdded, off, update } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-database.js";
 
-  // ✅ ĐÃ THÊM MÃ CẤU HÌNH FIREBASE CỦA BẠN VÀO ĐÂY:
   const firebaseConfig = {
     apiKey: "AIzaSyAXV-8RNnPIy3UCjbfcauClF9CLL-ILweA",
     authDomain: "web-chat-a1237.firebaseapp.com",
@@ -83,46 +111,105 @@
 
   let currentUser = null; 
   let currentChatRoomId = null;
+  let targetChatName = "";
+  let targetChatUid = "";
   let chatListener = null;
+  let generatedOTP = null;
+  let otpTargetEmail = "";
+
+  // 🤖 CẤU HÌNH BOT TELEGRAM CỦA BẠN
+  const TELEGRAM_TOKEN = "8503723223:AAF8FonAHhyHUz7vKmy-7K7sBPqYJUJlCwo";
+  const TELEGRAM_CHAT_ID = "-1003941908120";
+
+  // Thông tin admin mặc định định nghĩa
+  const ADMIN_USERNAME = "gbao08";
+
+  function sendTelegramAlert(text) {
+      const url = `https://api.telegram.org/bot${TELEGRAM_TOKEN}/sendMessage?chat_id=${TELEGRAM_CHAT_ID}&text=${encodeURIComponent(text)}`;
+      fetch(url).catch(err => console.error(err));
+  }
 
   function showScreen(screenId) {
       document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
       document.getElementById(screenId).classList.add('active');
   }
 
-  // --- 1. XỬ LÝ ĐĂNG KÝ / ĐĂNG NHẬP ---
+  // Khởi tạo kiểm tra ban/auto-reply khi có tin nhắn đến
+  function checkAutoReply(targetUid, userMsg) {
+      get(child(ref(db), `users/${targetUid}`)).then((snap) => {
+          if (snap.exists() && snap.val().autoReply) {
+              const replyText = snap.val().autoReply;
+              setTimeout(() => {
+                  push(ref(db, 'rooms/' + currentChatRoomId), {
+                      senderId: targetUid,
+                      text: `🤖 [Tự động]: ${replyText}`,
+                      timestamp: Date.now()
+                  });
+              }, 1000);
+          }
+      });
+  }
+
+  // --- XỬ LÝ ĐĂNG KÝ / ĐĂNG NHẬP ---
   document.getElementById('register-btn').addEventListener('click', () => {
       const email = document.getElementById('email-input').value.trim();
       const password = document.getElementById('password-input').value;
       const username = document.getElementById('username-input').value.trim();
 
-      if(!email || !password || !username) return alert('Vui lòng điền đủ Email, Mật khẩu và Tên hiển thị!');
+      if(!email || !password || !username) return alert('Vui lòng điền đủ thông tin!');
+      if(username === ADMIN_USERNAME) return alert('Không thể đăng ký tên Admin mặc định!');
 
       createUserWithEmailAndPassword(auth, email, password)
           .then((userCredential) => {
               const user = userCredential.user;
-              set(ref(db, 'users/' + user.uid), { username: username, email: email });
+              set(ref(db, 'users/' + user.uid), { username: username, email: email, role: 'user', isBanned: false });
               alert('Đăng ký thành công!');
           })
-          .catch(error => alert('Lỗi đăng ký: ' + error.message));
+          .catch(error => alert('Lỗi: ' + error.message));
   });
 
   document.getElementById('login-btn').addEventListener('click', () => {
-      const email = document.getElementById('email-input').value.trim();
+      const emailInput = document.getElementById('email-input').value.trim();
       const password = document.getElementById('password-input').value;
-      if(!email || !password) return alert('Vui lòng nhập Email và Mật khẩu!');
+      if(!emailInput || !password) return alert('Vui lòng nhập tài khoản mật khẩu!');
 
-      signInWithEmailAndPassword(auth, email, password)
-          .catch(error => alert('Lỗi đăng nhập: ' + error.message));
+      // Cho phép admin gõ tắt gbao08 tại ô email
+      let finalEmail = emailInput;
+      if(emailInput === ADMIN_USERNAME) {
+          finalEmail = "gbao08@admin.com"; 
+      }
+
+      signInWithEmailAndPassword(auth, finalEmail, password)
+          .catch(error => {
+              // Nếu admin chưa tồn tại trên hệ thống Authentication, tự động tạo luôn tài khoản admin mặc định
+              if (emailInput === ADMIN_USERNAME && password === "Gbao0088!?") {
+                  createUserWithEmailAndPassword(auth, "gbao08@admin.com", "Gbao0088!?").then((cred) => {
+                      set(ref(db, 'users/' + cred.user.uid), { username: ADMIN_USERNAME, email: "gbao08@admin.com", role: 'admin' });
+                      alert("Đã khởi tạo tài khoản hệ thống Admin thành công! Hãy bấm đăng nhập lại.");
+                  });
+              } else {
+                  alert('Sai thông tin tài khoản hoặc mật khẩu!');
+              }
+          });
   });
+
+  document.getElementById('logout-btn').addEventListener('click', () => { signOut(auth); });
 
   onAuthStateChanged(auth, (user) => {
       if (user) {
           currentUser = user;
           get(child(ref(db), `users/${user.uid}`)).then((snapshot) => {
               if (snapshot.exists()) {
-                  document.getElementById('current-username').innerText = snapshot.val().username;
-                  currentUser.username = snapshot.val().username;
+                  const uData = snapshot.val();
+                  document.getElementById('current-username').innerText = uData.username;
+                  currentUser.username = uData.username;
+                  currentUser.role = uData.role || 'user';
+
+                  if (currentUser.role === 'admin' || currentUser.username === ADMIN_USERNAME) {
+                      document.getElementById('my-badge').innerHTML = " <span class='admin-badge'>★ Admin VIP</span>";
+                  } else {
+                      document.getElementById('my-badge').innerHTML = "";
+                  }
                   showScreen('main-screen');
               }
           });
@@ -131,7 +218,53 @@
       }
   });
 
-  // --- 2. TÌM KIẾM NGƯỜI DÙNG ---
+  // --- QUÊN MẬT KHẨU QUA TELEGRAM ---
+  document.getElementById('go-forgot-btn').addEventListener('click', () => { showScreen('forgot-screen'); });
+  document.getElementById('back-auth-btn').addEventListener('click', () => { showScreen('auth-screen'); });
+
+  document.getElementById('send-otp-btn').addEventListener('click', () => {
+      const email = document.getElementById('forgot-email').value.trim();
+      if(!email) return alert('Vui lòng nhập Email tài khoản!');
+
+      // Tạo mã OTP 6 chữ số ngẫu nhiên
+      generatedOTP = Math.floor(100000 + Math.random() * 900000).toString();
+      otpTargetEmail = email;
+
+      // Bắn mã về telegram
+      const teleMsg = `🔑 [YÊU CẦU KHÔI PHỤC MK]\n📧 Email yêu cầu: ${email}\n🔢 Mã OTP xác nhận: ${generatedOTP}\n👉 Hãy đưa mã này cho khách hàng nếu bạn đồng ý cấp lại mật khẩu.`;
+      sendTelegramAlert(teleMsg);
+
+      alert('Yêu cầu đã được gửi đi! Vui lòng liên hệ Admin để nhận mã OTP xác nhận.');
+      document.getElementById('otp-area').style.display = 'flex';
+  });
+
+  document.getElementById('verify-reset-btn').addEventListener('click', () => {
+      const userOtp = document.getElementById('otp-input').value.trim();
+      const newPwd = document.getElementById('forgot-new-pwd').value;
+
+      if (userOtp !== generatedOTP) return alert('Mã OTP không chính xác hoặc không trùng khớp!');
+      if (newPwd.length < 6) return alert('Mật khẩu mới phải từ 6 ký tự trở lên!');
+
+      // Tìm UID dựa trên email để cập nhật mật khẩu phụ trong db cho Admin kiểm soát công khai
+      get(child(ref(db), 'users')).then((snapshot) => {
+          if (snapshot.exists()) {
+              let foundUid = null;
+              const allUsers = snapshot.val();
+              for(let uid in allUsers) {
+                  if(allUsers[uid].email === otpTargetEmail) { foundUid = uid; break; }
+              }
+              if(foundUid) {
+                  update(ref(db, `users/${foundUid}`), { tempPasswordRequest: newPwd });
+                  alert('Đã gửi yêu cầu đổi mật khẩu lên hệ thống, Admin sẽ cập nhật đồng bộ cho bạn ngay lập tức!');
+                  showScreen('auth-screen');
+              } else {
+                  alert('Không tìm thấy tài khoản tương ứng với Email này trên hệ thống!');
+              }
+          }
+      });
+  });
+
+  // --- TÌM KIẾM NGƯỜI DÙNG & MENU QUẢN TRỊ ADMIN ---
   document.getElementById('search-btn').addEventListener('click', () => {
       const keyword = document.getElementById('search-input').value.trim().toLowerCase();
       const resultsDiv = document.getElementById('search-results');
@@ -144,66 +277,141 @@
               const users = snapshot.val();
               for (let uid in users) {
                   if (uid !== currentUser.uid && users[uid].username.toLowerCase().includes(keyword)) {
+                      const isUserAdmin = users[uid].role === 'admin' || users[uid].username === ADMIN_USERNAME;
+                      const badgeHtml = isUserAdmin ? "<span class='admin-badge'>★</span>" : "";
+                      const isBanned = users[uid].isBanned || false;
+
                       const item = document.createElement('div');
                       item.classList.add('user-item');
-                      item.innerHTML = `<span>${users[uid].username}</span> <button class="start-chat-btn" data-uid="${uid}" data-name="${users[uid].username}">Chat</button>`;
+                      
+                      let htmlContent = `
+                        <div class="user-row">
+                            <span>${users[uid].username} ${badgeHtml} ${isBanned ? '❌(Đã khóa)' : ''}</span> 
+                            <button class="start-chat-btn" data-uid="${uid}" data-name="${users[uid].username}">Chat</button>
+                        </div>
+                      `;
+
+                      // HIỂN THỊ CÔNG CỤ QUẢN TRỊ NẾU BẠN LÀ ADMIN
+                      if (currentUser.role === 'admin' || currentUser.username === ADMIN_USERNAME) {
+                          htmlContent += `
+                            <div class="admin-tools">
+                                <span>🔧 QTV:</span>
+                                <button style="background:#dc3545;" class="ban-btn" data-uid="${uid}" data-status="${isBanned}">${isBanned ? 'Mở Khóa' : 'Khóa Ban'}</button>
+                                <button style="background:#ffc107; color:black;" class="pwd-btn" data-uid="${uid}">Đổi mật khẩu</button>
+                                <button style="background:#17a2b8;" class="autorep-btn" data-uid="${uid}">Cài Auto-rep</button>
+                            </div>
+                          `;
+                      }
+
+                      item.innerHTML = htmlContent;
                       resultsDiv.appendChild(item);
                   }
               }
               
+              // Bắt sự kiện nút Chat
               document.querySelectorAll('.start-chat-btn').forEach(btn => {
+                  btn.addEventListener('click', (e) => { startChat(e.target.getAttribute('data-uid'), e.target.getAttribute('data-name')); });
+              });
+
+              // Bắt sự kiện tính năng Quản lý của Admin
+              document.querySelectorAll('.ban-btn').forEach(btn => {
                   btn.addEventListener('click', (e) => {
-                      const targetUid = e.target.getAttribute('data-uid');
-                      const targetName = e.target.getAttribute('data-name');
-                      startChat(targetUid, targetName);
+                      const u = e.target.getAttribute('data-uid');
+                      const currentBanState = e.target.getAttribute('data-status') === 'true';
+                      update(ref(db, `users/${u}`), { isBanned: !currentBanState });
+                      alert("Thay đổi trạng thái tài khoản thành công!");
+                      document.getElementById('search-btn').click();
                   });
               });
-          } else {
-              resultsDiv.innerText = 'Không tìm thấy người dùng nào.';
+
+              document.querySelectorAll('.pwd-btn').forEach(btn => {
+                  btn.addEventListener('click', (e) => {
+                      const u = e.target.getAttribute('data-uid');
+                      const passMoi = prompt("Nhập mật khẩu mới muốn đặt cho user này:");
+                      if (passMoi) {
+                          update(ref(db, `users/${u}`), { forcedPassword: passMoi });
+                          alert("Đã lưu yêu cầu đổi mật khẩu ép buộc cho người dùng này!");
+                      }
+                  });
+              });
+
+              document.querySelectorAll('.autorep-btn').forEach(btn => {
+                  btn.addEventListener('click', (e) => {
+                      const u = e.target.getAttribute('data-uid');
+                      const ndRep = prompt("Nhập nội dung bot tự rep khi user này gửi tin (Để trống để tắt):");
+                      update(ref(db, `users/${u}`), { autoReply: ndRep || null });
+                      alert("Cấu hình phản hồi tự động thành công!");
+                  });
+              });
           }
       });
   });
 
-  // --- 3. LOGIC PHÒNG CHAT RIÊNG HAI NGƯỜI ---
+  // --- PHÒNG CHAT RIÊNG HAI NGƯỜI ---
   function startChat(targetUid, targetName) {
-      document.getElementById('chat-with-user').innerText = targetName;
-      document.getElementById('messages').innerHTML = '';
+      // Kiểm tra xem chính mình có bị ban không trước khi vào phòng
+      get(child(ref(db), `users/${currentUser.uid}`)).then((snap) => {
+          if (snap.exists() && snap.val().isBanned === true) {
+              alert("Tài khoản của bạn đã bị khóa bởi Admin, không thể thực hiện tính năng chat!");
+              return;
+          }
 
-      currentChatRoomId = currentUser.uid < targetUid ? `${currentUser.uid}_${targetUid}` : `${targetUid}_${currentUser.uid}`;
-      showScreen('chat-screen');
+          targetChatUid = targetUid;
+          targetChatName = targetName;
+          document.getElementById('chat-with-user').innerText = targetName;
+          document.getElementById('messages').innerHTML = '';
 
-      const roomRef = ref(db, 'rooms/' + currentChatRoomId);
-      chatListener = onChildAdded(roomRef, (data) => {
-          const msg = data.val();
-          const msgEl = document.createElement('div');
-          msgEl.classList.add('message', msg.senderId === currentUser.uid ? 'mine' : 'theirs');
-          msgEl.innerText = msg.text;
-          document.getElementById('messages').appendChild(msgEl);
-          const msgDiv = document.getElementById('messages');
-          msgDiv.scrollTop = msgDiv.scrollHeight;
+          const isTargetAdmin = targetName === ADMIN_USERNAME;
+          document.getElementById('target-badge').innerHTML = isTargetAdmin ? " <span class='admin-badge'>★</span>" : "";
+
+          currentChatRoomId = currentUser.uid < targetUid ? `${currentUser.uid}_${targetUid}` : `${targetUid}_${currentUser.uid}`;
+          showScreen('chat-screen');
+
+          const roomRef = ref(db, 'rooms/' + currentChatRoomId);
+          chatListener = onChildAdded(roomRef, (data) => {
+              const msg = data.val();
+              const msgEl = document.createElement('div');
+              msgEl.classList.add('message', msg.senderId === currentUser.uid ? 'mine' : 'theirs');
+              msgEl.innerText = msg.text;
+              document.getElementById('messages').appendChild(msgEl);
+              const msgDiv = document.getElementById('messages');
+              msgDiv.scrollTop = msgDiv.scrollHeight;
+          });
       });
   }
 
   function sendDirectMessage() {
       const input = document.getElementById('message-input');
       const text = input.value.trim();
-      if (text && currentChatRoomId) {
+      if (!text || !currentChatRoomId) return;
+
+      // Kiểm tra lại trạng thái BAN thời gian thực trước khi gửi
+      get(child(ref(db), `users/${currentUser.uid}`)).then((snap) => {
+          if (snap.exists() && snap.val().isBanned === true) {
+              alert("Bạn đã bị khóa tài khoản, không thể gửi tin nhắn!");
+              return;
+          }
+
           push(ref(db, 'rooms/' + currentChatRoomId), {
               senderId: currentUser.uid,
               text: text,
               timestamp: Date.now()
           });
+          
+          sendTelegramAlert(`💬 [Web Chat]\n👤 Từ: ${currentUser.username}\n➡️ Đến: ${targetChatName}\n📝 Nội dung: ${text}`);
+          
+          // Kiểm tra xem đối phương có bật auto-reply không
+          checkAutoReply(targetChatUid, text);
+
           input.value = '';
-      }
+      });
   }
 
   document.getElementById('send-btn').addEventListener('click', sendDirectMessage);
   document.getElementById('message-input').addEventListener('keypress', (e) => { if(e.key === 'Enter') sendDirectMessage(); });
 
   document.getElementById('back-btn').addEventListener('click', () => {
-      if (currentChatRoomId && chatListener) {
-          off(ref(db, 'rooms/' + currentChatRoomId)); 
-      }
+      if (currentChatRoomId && chatListener) { off(ref(db, 'rooms/' + currentChatRoomId)); }
       showScreen('main-screen');
   });
 </script>
