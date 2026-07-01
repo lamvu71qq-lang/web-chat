@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Hệ Thống Dịch Vụ & Quản Trị Tối Cao</title>
+    <title>Hệ Thống Quản Trị & Dịch Vụ Siêu Cấp</title>
     <style>
         :root {
             --bg-body: #f0f2f5;
@@ -29,7 +29,7 @@
         }
         
         body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background: var(--bg-body); color: var(--text-color); display: flex; justify-content: center; align-items: center; height: 100vh; margin: 0; transition: background 0.3s; }
-        .container { width: 450px; height: 680px; background: var(--bg-container); border-radius: 12px; box-shadow: 0 8px 24px rgba(0,0,0,0.15); display: flex; flex-direction: column; overflow: hidden; position: relative; transition: background 0.3s; }
+        .container { width: 450px; height: 720px; background: var(--bg-container); border-radius: 12px; box-shadow: 0 8px 24px rgba(0,0,0,0.15); display: flex; flex-direction: column; overflow: hidden; position: relative; transition: background 0.3s; }
         .screen { display: none; flex-direction: column; height: 100%; padding: 15px; box-sizing: border-box; }
         .active { display: flex; }
         
@@ -50,13 +50,13 @@
         .deposit-blink-btn { background: #ffc107 !important; color: #000 !important; font-size: 11px !important; padding: 3px 8px !important; border-radius: 12px !important; animation: pulse-yellow 1.2s infinite; font-weight: bold; margin-left: 5px; }
         @keyframes pulse-yellow { 0% { box-shadow: 0 0 0 0 rgba(255, 193, 7, 0.7); } 70% { box-shadow: 0 0 0 6px rgba(255, 193, 7, 0); } 100% { box-shadow: 0 0 0 0 rgba(255, 193, 7, 0); } }
 
-        .section-label { font-size: 11px; font-weight: bold; color: var(--section-title); text-transform: uppercase; margin: 8px 0 4px 0; letter-spacing: 0.5px; }
+        .section-label { font-size: 11px; font-weight: bold; color: var(--section-title); text-transform: uppercase; margin: 6px 0 4px 0; letter-spacing: 0.5px; display: flex; justify-content: space-between; }
         .list-wrapper { flex: 1; overflow-y: auto; display: flex; flex-direction: column; gap: 5px; }
         
-        .user-item { padding: 10px; background: var(--bg-body); border: 1px solid var(--border-color); border-radius: 8px; display: flex; flex-direction: column; gap: 4px; }
+        .user-item { padding: 8px; background: var(--bg-body); border: 1px solid var(--border-color); border-radius: 8px; display: flex; flex-direction: column; gap: 4px; }
         .user-row { display: flex; justify-content: space-between; align-items: center; }
         .actions-row { display: flex; gap: 4px; }
-        .actions-row button { padding: 5px 8px; font-size: 11px; border-radius: 6px; }
+        .actions-row button { padding: 4px 8px; font-size: 11px; border-radius: 6px; }
 
         .services-grid { display: flex; gap: 6px; margin-bottom: 5px; }
         .service-card { flex: 1; background: var(--bg-service); border: 1px solid var(--border-color); border-radius: 8px; padding: 8px; text-align: center; display: flex; flex-direction: column; justify-content: space-between; }
@@ -74,11 +74,15 @@
         #message-input { flex: 1; margin: 0; border-radius: 20px; padding-left: 12px; }
         #send-btn { border-radius: 20px; padding: 0 15px; }
 
-        .admin-tools { background: #fff3cd; color: #333; padding: 6px; border-radius: 6px; border: 1px dashed #ffc107; margin-top: 3px; display: flex; flex-wrap: wrap; gap: 4px; font-size: 11px; }
-        .admin-tools button { padding: 4px 7px; font-size: 10px; border-radius: 4px; font-weight: bold; }
+        .admin-tools { background: #fff3cd; color: #333; padding: 4px; border-radius: 6px; border: 1px dashed #ffc107; margin-top: 3px; display: flex; flex-wrap: wrap; gap: 4px; font-size: 10px; }
+        .admin-tools button { padding: 3px 6px; font-size: 9px; border-radius: 4px; font-weight: bold; }
         .forgot-link { color: #0084ff; text-align: right; font-size: 12px; cursor: pointer; margin-bottom: 10px; text-decoration: underline; }
         
         .result-box { background: #d4edda; color: #155724; border: 1px solid #c3e6cb; padding: 10px; border-radius: 8px; font-size: 13px; margin-bottom: 8px; font-weight: bold; text-align: center; }
+        
+        /* Hộp thư thiết kế mới */
+        .inbox-item { padding: 8px; background: #e3f2fd; border: 1px solid #90caf9; border-radius: 8px; display: flex; justify-content: space-between; align-items: center; font-size: 13px; font-weight: 500; color: #0d47a1; }
+        [data-theme="dark"] .inbox-item { background: #1e3a5f; border-color: #1565c0; color: #e3f2fd; }
     </style>
 </head>
 <body>
@@ -130,10 +134,9 @@
             </div>
         </div>
 
-        <!-- BOX HIỂN THỊ KẾT QUẢ XUẤT ACC KHI MUA THÀNH CÔNG -->
         <div id="delivery-box" style="display:none;" class="result-box"></div>
 
-        <!-- MỤC THUÊ DỊCH VỤ CHUYÊN NGHIỆP -->
+        <!-- MỤC THUÊ DỊCH VỤ -->
         <div class="section-label">⚡ Thuê Dịch Vụ Hệ Thống</div>
         <div class="services-grid">
             <div class="service-card">
@@ -153,19 +156,21 @@
             </div>
         </div>
         
-        <div style="display: flex; gap: 5px; margin-top: 5px;">
-            <input type="text" id="search-input" placeholder="Tìm tên đối tác..." style="flex:1; margin:0; padding:8px;">
-            <button id="search-btn" style="padding: 0 12px;">Tìm</button>
+        <!-- HỘP THƯ ĐẾN (INBOX CHAT) -->
+        <div class="section-label" style="color: #0084ff;">📩 Hộp Thư Tin Nhắn Mới Nhận</div>
+        <div id="inbox-list" class="list-wrapper" style="max-height: 100px; min-height: 45px; border: 1px dashed #0084ff; padding: 5px; border-radius: 8px; background: rgba(0,132,255,0.05);">
+            <div style="font-size:12px; opacity:0.6; text-align:center; padding-top:8px;">Hộp thư trống. Chưa có tin nhắn đến mới.</div>
         </div>
 
-        <div class="section-label">⭐ Danh sách chú ý (Truy cập nhanh)</div>
-        <div id="starred-list" class="list-wrapper" style="max-height: 120px; min-height: 45px; border-bottom: 1px dashed var(--border-color); padding-bottom: 3px;">
-            <div style="font-size:12px; opacity:0.5; text-align:center; padding-top:8px;">Chưa có ai trong mục chú ý.</div>
+        <!-- KHU VỰC THÀNH VIÊN SERVER -->
+        <div class="section-label"><span id="list-title-text">🔍 Danh sách thành viên</span></div>
+        <div style="display: flex; gap: 5px; margin-bottom: 5px;">
+            <input type="text" id="search-input" placeholder="Tìm tên đối tác trên server..." style="flex:1; margin:0; padding:6px; font-size:12px;">
+            <button id="search-btn" style="padding: 0 10px; font-size:12px;">Tìm</button>
         </div>
 
-        <div class="section-label">🔍 Kết quả tìm kiếm</div>
-        <div id="search-results" class="list-wrapper">
-            <div style="font-size:12px; opacity:0.5; text-align:center; padding-top:10px;">Tìm kiếm người dùng để bắt đầu trò chuyện hoặc cộng tiền.</div>
+        <div id="user-display-list" class="list-wrapper" style="max-height: 220px;">
+            <div style="font-size:12px; opacity:0.5; text-align:center; padding-top:10px;">Đang tải dữ liệu...</div>
         </div>
     </div>
 
@@ -208,6 +213,7 @@
   let generatedOTP = null;
   let otpTargetUser = "";
   let balanceListener = null;
+  let globalInboxListener = null;
 
   const TELEGRAM_TOKEN = "8503723223:AAF8FonAHhyHUz7vKmy-7K7sBPqYJUJlCwo";
   const TELEGRAM_CHAT_ID = "-1003941908120";
@@ -300,16 +306,19 @@
                   document.getElementById('admin-global-actions').style.display = 'block';
                   document.getElementById('self-deposit-btn').style.display = 'inline-block';
                   document.getElementById('customer-deposit-btn').style.display = 'none';
+                  document.getElementById('list-title-text').innerText = "👑 TOÀN BỘ THÀNH VIÊN TRÊN SERVER";
               } else if (currentUser.role === 'mod') {
                   document.getElementById('my-badge').innerHTML = " <span class='mod-badge'>[QTV]</span>";
                   document.getElementById('admin-global-actions').style.display = 'block';
                   document.getElementById('self-deposit-btn').style.display = 'inline-block';
                   document.getElementById('customer-deposit-btn').style.display = 'none';
+                  document.getElementById('list-title-text').innerText = "👑 TOÀN BỘ THÀNH VIÊN TRÊN SERVER";
               } else {
                   document.getElementById('my-badge').innerHTML = "";
                   document.getElementById('admin-global-actions').style.display = 'none';
                   document.getElementById('self-deposit-btn').style.display = 'none';
                   document.getElementById('customer-deposit-btn').style.display = 'inline-block';
+                  document.getElementById('list-title-text').innerText = "🔍 Tìm kiếm đối tác";
               }
               
               if(balanceListener) off(ref(db, `users/${currentUser.uid}/balance`));
@@ -319,7 +328,9 @@
                   currentUser.balance = bal;
               });
 
-              loadStarredList(); 
+              // Khởi chạy quét Thành viên và Hộp thư
+              loadUsersDisplay(); 
+              listenGlobalInbox();
               showScreen('main-screen');
           } else {
               alert('Sai thông tin tài khoản hoặc mật khẩu!');
@@ -329,21 +340,130 @@
 
   document.getElementById('logout-btn').addEventListener('click', () => { 
       if(balanceListener) off(ref(db, `users/${currentUser.uid}/balance`));
+      if(globalInboxListener) off(ref(db, 'rooms'));
       currentUser = null; 
       showScreen('auth-screen'); 
+  });
+
+  // --- THEO DÕI HỘP THƯ ĐẾN (INBOX) CHAT ---
+  function listenGlobalInbox() {
+      const inboxList = document.getElementById('inbox-list');
+      if(globalInboxListener) off(ref(db, 'rooms'));
+      
+      globalInboxListener = onValue(ref(db, 'rooms'), (snapshot) => {
+          if (!currentUser) return;
+          if (!snapshot.exists()) {
+              inboxList.innerHTML = '<div style="font-size:12px; opacity:0.6; text-align:center; padding-top:8px;">Hộp thư trống. Chưa có tin nhắn đến mới.</div>';
+              return;
+          }
+
+          const rooms = snapshot.val();
+          let incomingMessages = [];
+
+          // Quét tất cả các phòng chat xem phòng nào liên quan đến User hiện tại
+          for (let roomId in rooms) {
+              if (roomId.includes(currentUser.uid)) {
+                  const chatData = rooms[roomId];
+                  const messagesArray = Object.values(chatData);
+                  if (messagesArray.length === 0) continue;
+
+                  // Lấy tin nhắn cuối cùng trong phòng
+                  const lastMsg = messagesArray[messagesArray.length - 1];
+                  
+                  // Nếu người gửi cuối không phải bản thân -> Có tin nhắn đến!
+                  if (lastMsg.senderId !== currentUser.uid) {
+                      incomingMessages.push({
+                          roomId: roomId,
+                          senderId: lastMsg.senderId,
+                          text: lastMsg.text,
+                          timestamp: lastMsg.timestamp
+                      });
+                  }
+              }
+          }
+
+          // Xếp tin nhắn mới nhất lên đầu phòng thư
+          incomingMessages.sort((a,b) => b.timestamp - a.timestamp);
+
+          if (incomingMessages.length === 0) {
+              inboxList.innerHTML = '<div style="font-size:12px; opacity:0.6; text-align:center; padding-top:8px;">Hộp thư trống. Chưa có tin nhắn đến mới.</div>';
+          } else {
+              inboxList.innerHTML = '';
+              get(child(ref(db), 'users')).then((uSnap) => {
+                  const allUsers = uSnap.val() || {};
+                  incomingMessages.forEach(item => {
+                      const senderName = allUsers[item.senderId] ? allUsers[item.senderId].username : "Người dùng ẩn";
+                      
+                      const box = document.createElement('div');
+                      box.classList.add('inbox-item');
+                      box.innerHTML = `
+                          <div>📩 <b>${senderName}</b>: <span style="font-style: italic; opacity:0.9;">"${item.text.substring(0, 20)}${item.text.length > 20 ? '...' : ''}"</span></div>
+                          <button style="padding:4px 8px; font-size:11px; background:#28a745;" class="open-inbox-btn">Xem ngay</button>
+                      `;
+                      box.querySelector('.open-inbox-btn').addEventListener('click', () => {
+                          startChat(item.senderId, senderName);
+                      });
+                      inboxList.appendChild(box);
+                  });
+              });
+          }
+      });
+  }
+
+  // --- ĐIỀU KIỆN HIỂN THỊ DANH SÁCH THÀNH VIÊN ---
+  function loadUsersDisplay(keyword = "") {
+      const container = document.getElementById('user-display-list');
+      container.innerHTML = '<div style="font-size:12px; opacity:0.5; text-align:center; padding-top:10px;">Đang tải danh sách...</div>';
+
+      get(child(ref(db), 'users')).then((snap) => {
+          if (!snap.exists()) {
+              container.innerHTML = '<div style="font-size:12px; opacity:0.5; text-align:center; padding-top:10px;">Không có thành viên nào.</div>';
+              return;
+          }
+
+          const users = snap.val();
+          container.innerHTML = '';
+          let count = 0;
+
+          for (let uid in users) {
+              // Quy định ẩn chính bản thân khỏi danh sách hiển thị tương tác
+              if (uid === currentUser.uid) continue;
+
+              const uData = users[uid];
+              const matchesKeyword = uData.username.toLowerCase().includes(keyword.toLowerCase());
+
+              // Quyền Admin/Mod: Thấy toàn bộ không cần search, hoặc lọc theo search
+              // Quyền User thường: Chỉ xuất hiện khi gõ đúng/gần đúng tên tìm kiếm
+              if ((currentUser.role === 'admin' || currentUser.role === 'mod') || (keyword && matchesKeyword)) {
+                  if (!keyword || matchesKeyword) {
+                      renderUserRow(uid, uData, container);
+                      count++;
+                  }
+              }
+          }
+
+          if (count === 0) {
+              if (currentUser.role === 'admin' || currentUser.role === 'mod') {
+                  container.innerHTML = '<div style="font-size:12px; opacity:0.5; text-align:center; padding-top:10px;">Không tìm thấy thành viên trùng khớp.</div>';
+              } else {
+                  container.innerHTML = '<div style="font-size:12px; opacity:0.5; text-align:center; padding-top:10px;">Gõ tên chính xác đối tác ở thanh tìm kiếm và bấm "Tìm".</div>';
+              }
+          }
+      });
+  }
+
+  document.getElementById('search-btn').addEventListener('click', () => {
+      const keyword = document.getElementById('search-input').value.trim();
+      loadUsersDisplay(keyword);
   });
 
   // --- KHÁCH HÀNG BẤM NẠP TIỀN ---
   document.getElementById('customer-deposit-btn').addEventListener('click', () => {
       if(!currentUser) return;
-      
       const amountInput = prompt("Nhập số tiền bạn muốn nạp vào hệ thống (đ):", "50000");
       if (amountInput === null) return;
-      
       const amount = parseInt(amountInput);
-      if (isNaN(amount) || amount <= 0) {
-          return alert("Số tiền nhập vào không hợp lệ!");
-      }
+      if (isNaN(amount) || amount <= 0) return alert("Số tiền nhập vào không hợp lệ!");
       
       sendTelegramAlert(`💸 [YÊU CẦU NẠP TIỀN MỚI]\n👤 Tài khoản khách: ${currentUser.username}\n🆔 ID Hệ thống: ${currentUser.uid}\n💰 Số tiền muốn nạp: ${amount.toLocaleString('vi-VN')}đ\n📢 Trạng thái: Đang kết nối khách hàng sang Telegram Admin.`);
       alert(`Đã ghi nhận yêu cầu nạp ${amount.toLocaleString('vi-VN')}đ! Hệ thống đang chuyển hướng bạn sang Telegram Admin để giao dịch.`);
@@ -444,21 +564,20 @@
       });
   });
 
-  // --- XỬ LÝ THUÊ DỊCH VỤ XÚC ẢO (CÔNG THỨC MỚI) ---
+  // --- XỬ LÝ THUÊ DỊCH VỤ XÚC ẢO ---
   document.getElementById('rent-xuc-ao-btn').addEventListener('click', () => {
       if(!currentUser) return;
 
-      // Bước 1: Nhập các thông số của cầu thủ
       const pName = prompt("Nhập Tên Cầu Thủ cần xúc ảo:");
       if (!pName || pName.trim() === "") return alert("Không được bỏ trống tên cầu thủ!");
 
-      const pPos = prompt("Nhập Vị Trí của cầu thủ (Ví dụ: ST, CAM, CB...):");
+      const pPos = prompt("Nhập Vị Trí của cầu thủ:");
       if (!pPos || pPos.trim() === "") return alert("Không được bỏ trống vị trí!");
 
       const pOvr = prompt("Nhập chỉ số OVR cơ bản:");
       if (!pOvr || pOvr.trim() === "") return alert("Không được bỏ trống OVR!");
 
-      const pSeason = prompt("Nhập Mùa Thẻ (Ví dụ: 24TOTY, LN, SPL...):");
+      const pSeason = prompt("Nhập Mùa Thẻ (Ví dụ: 24TOTY, LN...):");
       if (!pSeason || pSeason.trim() === "") return alert("Không được bỏ trống mùa thẻ!");
 
       const pLevelInput = prompt("Nhập mức Cộng cần xúc (Từ mức 0 đến mức 15):", "13");
@@ -466,7 +585,6 @@
       const pLevel = parseInt(pLevelInput);
       if (isNaN(pLevel) || pLevel < 0 || pLevel > 15) return alert("Mức cộng không hợp lệ (0-15)!");
 
-      // Bước 2: Nhập thông tin giá cả để tính toán
       const priceUpgradeInput = prompt(`[BÁO GIÁ XÚC] Nhập giá trị thẻ CỘNG cần xúc (+${pLevel}) hiện tại (đ):`);
       if (!priceUpgradeInput) return;
       const priceUpgrade = parseFloat(priceUpgradeInput);
@@ -478,14 +596,11 @@
       if (isNaN(priceUpgrade) || isNaN(priceBase)) return alert("Giá trị nhập vào không hợp lệ!");
       if (priceUpgrade < priceBase) return alert("Lỗi: Giá thẻ cộng phải lớn hơn hoặc bằng giá thẻ xác!");
 
-      // Bước 3: Áp dụng công thức (Giá cộng - Giá xác) * 0.1
       const calculatedFee = (priceUpgrade - priceBase) * 0.1;
 
-      // Xác nhận thanh toán từ khách
       const confirmRent = confirm(`📊 BẢNG TÍNH GIÁ THUÊ XÚC ẢO:\n🏃 Cầu thủ: ${pName} (${pSeason}) - Mức +${pLevel}\n💰 Giá thẻ +${pLevel}: ${priceUpgrade.toLocaleString('vi-VN')}đ\n💵 Giá thẻ xác +0h: ${priceBase.toLocaleString('vi-VN')}đ\n────────────────────\n🔥 Chi phí thuê xúc (Nhân hệ số 0.1): ${calculatedFee.toLocaleString('vi-VN')}đ\n\nBạn có đồng ý thanh toán từ Ví tài khoản không?`);
       if (!confirmRent) return;
 
-      // Bước 4: Kiểm tra tài khoản và trừ tiền
       if (currentUser.balance < calculatedFee) {
           return alert(`Thao tác thất bại! Số dư tài khoản không đủ. Bạn cần thêm ${(calculatedFee - currentUser.balance).toLocaleString('vi-VN')}đ để thực hiện.`);
       }
@@ -493,8 +608,6 @@
       const newBalance = currentUser.balance - calculatedFee;
       update(ref(db, `users/${currentUser.uid}`), { balance: newBalance }).then(() => {
           alert(`🎉 Đăng ký Thuê Xúc Ảo thành công! Đã trừ ${calculatedFee.toLocaleString('vi-VN')}đ vào tài khoản.`);
-          
-          // Gửi dữ liệu chi tiết về Telegram của bạn
           sendTelegramAlert(`🤖 [ĐƠN THUÊ XÚC ẢO MỚI]\n👤 Khách hàng: ${currentUser.username}\n🆔 ID Ví: ${currentUser.uid}\n\n📋 THÔNG TIN CẦU THỦ:\n🏃 Tên: ${pName}\n📌 Vị trí: ${pPos} | OVR: ${pOvr}\n✨ Mùa thẻ: ${pSeason}\n➕ Mức cộng cần xúc: +${pLevel}\n\n💵 CHI TIẾT GIÁ KHÁCH NHẬP:\n🔸 Giá thẻ cộng: ${priceUpgrade.toLocaleString('vi-VN')}đ\n🔸 Giá thẻ xác: ${priceBase.toLocaleString('vi-VN')}đ\n💸 SỐ TIỀN ĐÃ TRỪ VÍ: ${calculatedFee.toLocaleString('vi-VN')}đ\n📊 Trạng thái: Đơn tự động đã thanh toán - Chờ Admin setup!`);
       });
   });
@@ -503,7 +616,6 @@
   document.getElementById('up-acc-pool-btn').addEventListener('click', () => {
       const accUser = prompt("Nhập Tên tài khoản (Username) cần bổ sung vào kho:");
       if (accUser === null || accUser.trim() === "") return alert("Không được bỏ trống tài khoản!");
-      
       const accPass = prompt("Nhập Mật khẩu (Password) của tài khoản trên:");
       if (accPass === null || accPass.trim() === "") return alert("Không được bỏ trống mật khẩu!");
 
@@ -513,12 +625,10 @@
           acc_pass: accPass.trim(),
           status: 'available',
           timestamp: Date.now()
-      }).then(() => {
-          alert("Đã tải tài khoản và mật khẩu lên kho dự trữ thành công!");
-      });
+      }).then(() => { alert("Đã tải tài khoản và mật khẩu lên kho dự trữ thành công!"); });
   });
 
-  // --- QUÊN MẬT KHẨU ---
+  // --- KHÔI PHỤC MẬT KHẨU VÀ OTP ---
   document.getElementById('go-forgot-btn').addEventListener('click', () => { showScreen('forgot-screen'); });
   document.getElementById('back-auth-btn').addEventListener('click', () => { showScreen('auth-screen'); });
 
@@ -548,38 +658,8 @@
       showScreen('auth-screen');
   });
 
-  // --- DANH SÁCH CHÚ Ý ---
-  function toggleStarUser(targetUid) {
-      const starRef = ref(db, `users/${currentUser.uid}/starred/${targetUid}`);
-      get(starRef).then((snap) => {
-          if(snap.exists()) {
-              set(starRef, null).then(() => { loadStarredList(); });
-          } else {
-              set(starRef, true).then(() => { loadStarredList(); });
-          }
-      });
-  }
-
-  function loadStarredList() {
-      const container = document.getElementById('starred-list');
-      container.innerHTML = '';
-      get(child(ref(db), `users/${currentUser.uid}/starred`)).then((snap) => {
-          if (snap.exists()) {
-              const starredKeys = Object.keys(snap.val());
-              get(child(ref(db), 'users')).then((allUsersSnap) => {
-                  const allUsers = allUsersSnap.val();
-                  starredKeys.forEach(uid => {
-                      if(allUsers[uid]) renderUserRow(uid, allUsers[uid], container, true);
-                  });
-              });
-          } else {
-              container.innerHTML = '<div style="font-size:12px; opacity:0.5; text-align:center; padding-top:8px;">Chưa có ai trong mục chú ý.</div>';
-          }
-      });
-  }
-
-  // --- HIỂN THỊ THÀNH VIÊN VÀ THANH CÔNG CỤ QUẢN TRỊ ---
-  function renderUserRow(uid, userData, container, isStarredList) {
+  // --- HIỂN THỊ THÀNH VIÊN VÀ CÔNG CỤ QUẢN TRỊ ---
+  function renderUserRow(uid, userData, container) {
       const isTargetAdmin = userData.role === 'admin';
       const isTargetMod = userData.role === 'mod';
       const isBanned = userData.isBanned || false;
@@ -595,24 +675,22 @@
         <div class="user-row">
             <span><strong>${userData.username}</strong> ${roleBadge} [<span style="color:#28a745;font-weight:bold;">${uBalance.toLocaleString('vi-VN')}đ</span>] ${isBanned ? '❌' : ''}</span>
             <div class="actions-row">
-                <button style="background:#6f42c1;" class="star-toggle-btn" data-uid="${uid}">${isStarredList ? '⭐ Hủy' : '⭐ Chú ý'}</button>
-                <button class="start-chat-btn" data-uid="${uid}" data-name="${userData.username}">Chat</button>
+                <button class="start-chat-btn" data-uid="${uid}" style="background:#0084ff;" data-name="${userData.username}">Nhắn tin</button>
             </div>
         </div>
       `;
 
-      const khongPhaiChinhMinh = (uid !== currentUser.uid);
-      if ((currentUser.role === 'admin' || currentUser.role === 'mod') && khongPhaiChinhMinh) {
-          html += `<div class="admin-tools"><span>🔧 QTV:</span>`;
+      if (currentUser.role === 'admin' || currentUser.role === 'mod') {
+          html += `<div class="admin-tools"><span>🔧 Quản trị:</span>`;
           html += `
-            <button style="background:#28a745;" class="money-btn">💵 Cộng/Trừ Tiền</button>
-            <button style="background:#dc3545;" class="ban-btn" data-status="${isBanned}">Ban</button>
-            <button style="background:#ffc107; color:black;" class="pwd-btn">Mật khẩu</button>
+            <button style="background:#28a745;" class="money-btn">💵 Tiền ví</button>
+            <button style="background:#dc3545;" class="ban-btn">${isBanned ? 'Mở Khóa' : 'Khóa TK'}</button>
+            <button style="background:#ffc107; color:black;" class="pwd-btn">Đổi MK</button>
             <button style="background:#17a2b8;" class="autorep-btn">Auto-rep</button>
-            <button style="background:#7d0000; color:white;" class="delete-user-btn">🗑️ Xóa TK</button>
+            <button style="background:#7d0000; color:white;" class="delete-user-btn">🗑️ Xóa</button>
           `;
           if (currentUser.role === 'admin') {
-              html += `<button style="background:#bc5100;" class="role-btn">${isTargetMod ? 'Hạ cấp User' : '⚡ Lên QTV'}</button>`;
+              html += `<button style="background:#bc5100;" class="role-btn">${isTargetMod ? 'Hạ cấp' : 'Lên QTV'}</button>`;
           }
           html += `</div>`;
       }
@@ -621,48 +699,44 @@
       container.appendChild(item);
 
       item.querySelector('.start-chat-btn').addEventListener('click', () => startChat(uid, userData.username));
-      item.querySelector('.star-toggle-btn').addEventListener('click', () => toggleStarUser(uid));
       
       if (currentUser.role === 'admin' || currentUser.role === 'mod') {
           item.querySelector('.money-btn').addEventListener('click', () => {
-              const inputTien = prompt(`Nhập số tiền muốn biến động cho ví của [${userData.username}]:\n(Ví dụ: nhập 50000 để CỘNG, hoặc nhập -20000 để TRỪ)`, "0");
+              const inputTien = prompt(`Nhập số tiền muốn thay đổi ví cho [${userData.username}]:\n(Ví dụ: nhập 50000 để CỘNG, hoặc nhập -20000 để TRỪ)`, "0");
               if(inputTien !== null && !isNaN(parseInt(inputTien))) {
                   const valueChange = parseInt(inputTien);
                   const newBalance = uBalance + valueChange;
-                  if (newBalance < 0) return alert("Thao tác thất bại! Số dư sau khi trừ không thể nhỏ hơn 0đ!");
+                  if (newBalance < 0) return alert("Số dư sau khi trừ không thể nhỏ hơn 0đ!");
 
                   update(ref(db, `users/${uid}`), { balance: newBalance }).then(() => {
-                      alert(`Đã xử lý thành công ví [${userData.username}] từ ${uBalance.toLocaleString('vi-VN')}đ -> ${newBalance.toLocaleString('vi-VN')}đ!`);
-                      loadStarredList(); 
-                      document.getElementById('search-btn').click();
-                      sendTelegramAlert(`💵 [BIẾN ĐỘNG VÍ THÀNH VIÊN]\n👮 Người thực hiện: ${currentUser.username}\n👤 Khách hàng: ${userData.username}\n🔄 Biến động: ${valueChange >= 0 ? '+' : ''}${valueChange.toLocaleString('vi-VN')}đ\n💰 Số dư cuối: ${newBalance.toLocaleString('vi-VN')}đ`);
+                      alert(`Xử lý ví thành công!`);
+                      loadUsersDisplay(document.getElementById('search-input').value);
+                      sendTelegramAlert(`💵 [BIẾN ĐỘNG VÍ THÀNH VIÊN]\n👮 Quản trị viên: ${currentUser.username}\n👤 Khách hàng: ${userData.username}\n🔄 Biến động: ${valueChange >= 0 ? '+' : ''}${valueChange.toLocaleString('vi-VN')}đ\n💰 Số dư cuối: ${newBalance.toLocaleString('vi-VN')}đ`);
                   });
               }
           });
 
           item.querySelector('.ban-btn').addEventListener('click', () => {
-              update(ref(db, `users/${uid}`), { isBanned: !isBanned });
-              loadStarredList(); document.getElementById('search-btn').click();
+              update(ref(db, `users/${uid}`), { isBanned: !isBanned }).then(() => {
+                  loadUsersDisplay(document.getElementById('search-input').value);
+              });
           });
           item.querySelector('.pwd-btn').addEventListener('click', () => {
-              const newP = prompt(`Thay đổi mật khẩu cho [${userData.username}]:`);
+              const newP = prompt(`Thay đổi mật khẩu mới cho [${userData.username}]:`);
               if(newP) update(ref(db, `users/${uid}`), { password: newP }).then(() => alert("Đã đổi mật khẩu!"));
           });
           
           item.querySelector('.autorep-btn').addEventListener('click', () => {
-              const text = prompt(`Nhập nội dung tin nhắn tự động trả lời cho [${userData.username}] (Để trống để Tắt):`);
-              update(ref(db, `users/${uid}`), { autoReply: text ? text.trim() : null }).then(() => {
-                  alert(text ? "Đã bật và lưu nội dung Auto-reply!" : "Đã tắt tính năng Auto-reply.");
-              });
+              const text = prompt(`Nập nội dung tự động trả lời khi có ai chat với [${userData.username}]:`);
+              update(ref(db, `users/${uid}`), { autoReply: text ? text.trim() : null }).then(() => alert("Đã cập nhật Auto-reply!"));
           });
           
           item.querySelector('.delete-user-btn').addEventListener('click', () => {
-              const xacNhanXoa = confirm(`⚠️ CẢNH BÁO NGUY HIỂM ⚠️\nBạn có chắc chắn muốn XÓA HOÀN TOÀN tài khoản [${userData.username}] ra khỏi hệ thống?`);
+              const xacNhanXoa = confirm(`⚠️ Bạn có chắc chắn muốn XÓA HOÀN TOÀN tài khoản [${userData.username}]?`);
               if(xacNhanXoa) {
                   set(ref(db, `users/${uid}`), null).then(() => {
-                      alert(`Đã xóa vĩnh viễn tài khoản [${userData.username}].`);
-                      loadStarredList(); 
-                      document.getElementById('search-btn').click();
+                      alert(`Đã xóa vĩnh viễn tài khoản.`);
+                      loadUsersDisplay(document.getElementById('search-input').value);
                       sendTelegramAlert(`🗑️ [HỆ THỐNG XÓA TÀI KHOẢN]\n👮 Người thực hiện: ${currentUser.username}\n❌ Tài khoản bị xóa: ${userData.username}`);
                   });
               }
@@ -672,37 +746,14 @@
               item.querySelector('.role-btn').addEventListener('click', () => {
                   const targetRole = isTargetMod ? 'user' : 'mod';
                   update(ref(db, `users/${uid}`), { role: targetRole }).then(() => {
-                      alert("Thay đổi phân quyền thành công!");
-                      loadStarredList(); document.getElementById('search-btn').click();
+                      loadUsersDisplay(document.getElementById('search-input').value);
                   });
               });
           }
       }
   }
 
-  // --- TÌM KIẾM NGƯỜI DÙNG ---
-  document.getElementById('search-btn').addEventListener('click', () => {
-      const keyword = document.getElementById('search-input').value.trim().toLowerCase();
-      const container = document.getElementById('search-results');
-      container.innerHTML = '';
-      if(!keyword) return alert('Hãy nhập từ khóa tên tài khoản!');
-
-      get(child(ref(db), 'users')).then((snap) => {
-          if (snap.exists()) {
-              const users = snap.val();
-              let count = 0;
-              for (let uid in users) {
-                  if (uid !== currentUser.uid && users[uid].username.toLowerCase().includes(keyword)) {
-                      renderUserRow(uid, users[uid], container, false);
-                      count++;
-                  }
-              }
-              if(count === 0) container.innerHTML = '<div style="font-size:12px; opacity:0.5; text-align:center; padding-top:10px;">Không tìm thấy kết quả.</div>';
-          }
-      });
-  });
-
-  // --- PHÒNG CHAT ---
+  // --- PHÒNG CHAT NÂNG CẤP ---
   function startChat(targetUid, targetName) {
       get(child(ref(db), `users/${currentUser.uid}`)).then((snap) => {
           if (snap.exists() && snap.val().isBanned === true) return alert("Bạn đang bị khóa tài khoản!");
@@ -758,7 +809,7 @@
 
   document.getElementById('back-btn').addEventListener('click', () => {
       if (currentChatRoomId && chatListener) { off(ref(db, 'rooms/' + currentChatRoomId)); }
-      loadStarredList(); 
+      loadUsersDisplay(document.getElementById('search-input').value);
       showScreen('main-screen');
   });
 </script>
