@@ -1,0 +1,211 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Ứng Dụng Chat Riêng Tư</title>
+    <style>
+        body { font-family: Arial, sans-serif; background: #f0f2f5; display: flex; justify-content: center; align-items: center; height: 100vh; margin: 0; }
+        .container { width: 400px; height: 550px; background: white; border-radius: 8px; box-shadow: 0 4px 10px rgba(0,0,0,0.1); display: flex; flex-direction: column; overflow: hidden; }
+        .screen { display: none; flex-direction: column; height: 100%; padding: 20px; box-sizing: border-box; }
+        .active { display: flex; }
+        input { padding: 10px; margin-bottom: 10px; border: 1px solid #ddd; border-radius: 5px; outline: none; }
+        button { padding: 10px; background: #0084ff; color: white; border: none; border-radius: 5px; cursor: pointer; font-weight: bold; }
+        button:hover { background: #0066cc; }
+        
+        /* Giao diện chính / Tìm kiếm */
+        #user-info { font-weight: bold; margin-bottom: 15px; color: #333; }
+        #search-results { margin-top: 15px; flex: 1; overflow-y: auto; }
+        .user-item { padding: 10px; background: #f8f9fa; border: 1px solid #eee; margin-bottom: 5px; border-radius: 5px; display: flex; justify-content: space-between; align-items: center; }
+
+        /* Giao diện Chat */
+        #chat-header { font-weight: bold; padding-bottom: 10px; border-bottom: 1px solid #ddd; display: flex; justify-content: space-between; }
+        #messages { flex: 1; padding: 10px 0; overflow-y: auto; display: flex; flex-direction: column; gap: 8px; }
+        .message { padding: 8px 12px; border-radius: 15px; max-width: 70%; word-wrap: break-word; }
+        .mine { background: #0084ff; color: white; align-self: flex-end; }
+        .theirs { background: #e4e6eb; color: black; align-self: flex-start; }
+        #input-area { display: flex; gap: 5px; }
+        #message-input { flex: 1; margin: 0; border-radius: 20px; }
+        #send-btn { border-radius: 20px; }
+    </style>
+</head>
+<body>
+
+<div class="container">
+    <div id="auth-screen" class="screen active">
+        <h2>Đăng Nhập / Đăng Ký</h2>
+        <input type="email" id="email-input" placeholder="Email (Ví dụ: user@test.com)">
+        <input type="password" id="password-input" placeholder="Mật khẩu (Ít nhất 6 ký tự)">
+        <input type="text" id="username-input" placeholder="Tên hiển thị (Khi đăng ký mới)">
+        <button id="login-btn" style="margin-bottom: 5px;">Đăng Nhập</button>
+        <button id="register-btn" style="background: #28a745;">Đăng Ký Tài Khoản Mới</button>
+    </div>
+
+    <div id="main-screen" class="screen">
+        <div id="user-info">Xin chào: <span id="current-username">...</span></div>
+        <input type="text" id="search-input" placeholder="Nhập tên chính xác để tìm...">
+        <button id="search-btn">Tìm kiếm người dùng</button>
+        <div id="search-results"></div>
+    </div>
+
+    <div id="chat-screen" class="screen">
+        <div id="chat-header">
+            <span>Đang chat với: <span id="chat-with-user">...</span></span>
+            <button id="back-btn" style="padding: 3px 8px; background: #dc3545;">Quay lại</button>
+        </div>
+        <div id="messages"></div>
+        <div id="input-area">
+            <input type="text" id="message-input" placeholder="Nhập tin nhắn..." autocomplete="off">
+            <button id="send-btn">Gửi</button>
+        </div>
+    </div>
+</div>
+
+<script type="module">
+  import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
+  import { getAuth, createUserWithEmailAndPassword, signInWithEmailAndPassword, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-auth.js";
+  import { getDatabase, ref, set, get, child, push, onChildAdded, off } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-database.js";
+
+  // ✅ ĐÃ THÊM MÃ CẤU HÌNH FIREBASE CỦA BẠN VÀO ĐÂY:
+  const firebaseConfig = {
+    apiKey: "AIzaSyAXV-8RNnPIy3UCjbfcauClF9CLL-ILweA",
+    authDomain: "web-chat-a1237.firebaseapp.com",
+    databaseURL: "https://web-chat-a1237-default-rtdb.firebaseio.com",
+    projectId: "web-chat-a1237",
+    storageBucket: "web-chat-a1237.firebasestorage.app",
+    messagingSenderId: "663405837568",
+    appId: "1:663405837568:web:47076505da3e6943cd47e5"
+  };
+
+  const app = initializeApp(firebaseConfig);
+  const auth = getAuth(app);
+  const db = getDatabase(app);
+
+  let currentUser = null; 
+  let currentChatRoomId = null;
+  let chatListener = null;
+
+  function showScreen(screenId) {
+      document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
+      document.getElementById(screenId).classList.add('active');
+  }
+
+  // --- 1. XỬ LÝ ĐĂNG KÝ / ĐĂNG NHẬP ---
+  document.getElementById('register-btn').addEventListener('click', () => {
+      const email = document.getElementById('email-input').value.trim();
+      const password = document.getElementById('password-input').value;
+      const username = document.getElementById('username-input').value.trim();
+
+      if(!email || !password || !username) return alert('Vui lòng điền đủ Email, Mật khẩu và Tên hiển thị!');
+
+      createUserWithEmailAndPassword(auth, email, password)
+          .then((userCredential) => {
+              const user = userCredential.user;
+              set(ref(db, 'users/' + user.uid), { username: username, email: email });
+              alert('Đăng ký thành công!');
+          })
+          .catch(error => alert('Lỗi đăng ký: ' + error.message));
+  });
+
+  document.getElementById('login-btn').addEventListener('click', () => {
+      const email = document.getElementById('email-input').value.trim();
+      const password = document.getElementById('password-input').value;
+      if(!email || !password) return alert('Vui lòng nhập Email và Mật khẩu!');
+
+      signInWithEmailAndPassword(auth, email, password)
+          .catch(error => alert('Lỗi đăng nhập: ' + error.message));
+  });
+
+  onAuthStateChanged(auth, (user) => {
+      if (user) {
+          currentUser = user;
+          get(child(ref(db), `users/${user.uid}`)).then((snapshot) => {
+              if (snapshot.exists()) {
+                  document.getElementById('current-username').innerText = snapshot.val().username;
+                  currentUser.username = snapshot.val().username;
+                  showScreen('main-screen');
+              }
+          });
+      } else {
+          showScreen('auth-screen');
+      }
+  });
+
+  // --- 2. TÌM KIẾM NGƯỜI DÙNG ---
+  document.getElementById('search-btn').addEventListener('click', () => {
+      const keyword = document.getElementById('search-input').value.trim().toLowerCase();
+      const resultsDiv = document.getElementById('search-results');
+      resultsDiv.innerHTML = '';
+
+      if(!keyword) return alert('Nhập tên cần tìm!');
+
+      get(child(ref(db), 'users')).then((snapshot) => {
+          if (snapshot.exists()) {
+              const users = snapshot.val();
+              for (let uid in users) {
+                  if (uid !== currentUser.uid && users[uid].username.toLowerCase().includes(keyword)) {
+                      const item = document.createElement('div');
+                      item.classList.add('user-item');
+                      item.innerHTML = `<span>${users[uid].username}</span> <button class="start-chat-btn" data-uid="${uid}" data-name="${users[uid].username}">Chat</button>`;
+                      resultsDiv.appendChild(item);
+                  }
+              }
+              
+              document.querySelectorAll('.start-chat-btn').forEach(btn => {
+                  btn.addEventListener('click', (e) => {
+                      const targetUid = e.target.getAttribute('data-uid');
+                      const targetName = e.target.getAttribute('data-name');
+                      startChat(targetUid, targetName);
+                  });
+              });
+          } else {
+              resultsDiv.innerText = 'Không tìm thấy người dùng nào.';
+          }
+      });
+  });
+
+  // --- 3. LOGIC PHÒNG CHAT RIÊNG HAI NGƯỜI ---
+  function startChat(targetUid, targetName) {
+      document.getElementById('chat-with-user').innerText = targetName;
+      document.getElementById('messages').innerHTML = '';
+
+      currentChatRoomId = currentUser.uid < targetUid ? `${currentUser.uid}_${targetUid}` : `${targetUid}_${currentUser.uid}`;
+      showScreen('chat-screen');
+
+      const roomRef = ref(db, 'rooms/' + currentChatRoomId);
+      chatListener = onChildAdded(roomRef, (data) => {
+          const msg = data.val();
+          const msgEl = document.createElement('div');
+          msgEl.classList.add('message', msg.senderId === currentUser.uid ? 'mine' : 'theirs');
+          msgEl.innerText = msg.text;
+          document.getElementById('messages').appendChild(msgEl);
+          const msgDiv = document.getElementById('messages');
+          msgDiv.scrollTop = msgDiv.scrollHeight;
+      });
+  }
+
+  function sendDirectMessage() {
+      const input = document.getElementById('message-input');
+      const text = input.value.trim();
+      if (text && currentChatRoomId) {
+          push(ref(db, 'rooms/' + currentChatRoomId), {
+              senderId: currentUser.uid,
+              text: text,
+              timestamp: Date.now()
+          });
+          input.value = '';
+      }
+  }
+
+  document.getElementById('send-btn').addEventListener('click', sendDirectMessage);
+  document.getElementById('message-input').addEventListener('keypress', (e) => { if(e.key === 'Enter') sendDirectMessage(); });
+
+  document.getElementById('back-btn').addEventListener('click', () => {
+      if (currentChatRoomId && chatListener) {
+          off(ref(db, 'rooms/' + currentChatRoomId)); 
+      }
+      showScreen('main-screen');
+  });
+</script>
+</body>
+</html>
