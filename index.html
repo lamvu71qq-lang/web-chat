@@ -29,8 +29,8 @@
         }
         
         body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background: var(--bg-body); color: var(--text-color); display: flex; justify-content: center; align-items: center; height: 100vh; margin: 0; transition: background 0.3s; }
-        .container { width: 450px; height: 720px; background: var(--bg-container); border-radius: 12px; box-shadow: 0 8px 24px rgba(0,0,0,0.15); display: flex; flex-direction: column; overflow: hidden; position: relative; transition: background 0.3s; }
-        .screen { display: none; flex-direction: column; height: 100%; padding: 15px; box-sizing: border-box; }
+        .container { width: 450px; height: 740px; background: var(--bg-container); border-radius: 12px; box-shadow: 0 8px 24px rgba(0,0,0,0.15); display: flex; flex-direction: column; overflow: hidden; position: relative; transition: background 0.3s; }
+        .screen { display: none; flex-direction: column; height: 100%; padding: 15px; box-sizing: border-box; overflow-y: auto; }
         .active { display: flex; }
         
         input, select { padding: 9px; margin-bottom: 8px; border: 1px solid var(--border-color); border-radius: 8px; outline: none; background: var(--input-bg); color: var(--text-color); font-size: 14px; }
@@ -43,7 +43,7 @@
         .mod-badge { color: #00dbde; font-weight: bold; text-shadow: 0 0 5px #fc00ff; margin-left: 4px; font-size: 12px; }
         @keyframes blink { 0%, 100% { opacity: 0.7; } 50% { opacity: 1; } }
 
-        #user-info { font-size: 14px; margin-bottom: 10px; border-bottom: 1px solid var(--border-color); padding-bottom: 8px; }
+        #user-info { font-size: 14px; margin-bottom: 10px; border-bottom: 1px solid var(--border-color); padding-bottom: 8px; flex-shrink: 0; }
         .user-meta { display: flex; justify-content: space-between; align-items: center; margin-bottom: 5px; }
         .balance-badge { background: #28a745; color: white; padding: 3px 8px; border-radius: 12px; font-weight: bold; font-size: 12px; }
         
@@ -58,7 +58,7 @@
         .actions-row { display: flex; gap: 4px; }
         .actions-row button { padding: 4px 8px; font-size: 11px; border-radius: 6px; }
 
-        .services-grid { display: flex; gap: 6px; margin-bottom: 5px; }
+        .services-grid { display: flex; gap: 6px; margin-bottom: 5px; flex-shrink: 0; }
         .service-card { flex: 1; background: var(--bg-service); border: 1px solid var(--border-color); border-radius: 8px; padding: 8px; text-align: center; display: flex; flex-direction: column; justify-content: space-between; }
         .service-title { font-size: 11px; font-weight: bold; height: 32px; display: flex; align-items: center; justify-content: center; }
         .service-price { font-size: 12px; color: #28a745; font-weight: bold; margin: 2px 0; }
@@ -79,10 +79,10 @@
         .forgot-link { color: #0084ff; text-align: right; font-size: 12px; cursor: pointer; margin-bottom: 10px; text-decoration: underline; }
         
         .result-box { background: #d4edda; color: #155724; border: 1px solid #c3e6cb; padding: 10px; border-radius: 8px; font-size: 13px; margin-bottom: 8px; font-weight: bold; text-align: center; }
-        
-        /* Hộp thư thiết kế mới */
         .inbox-item { padding: 8px; background: #e3f2fd; border: 1px solid #90caf9; border-radius: 8px; display: flex; justify-content: space-between; align-items: center; font-size: 13px; font-weight: 500; color: #0d47a1; }
         [data-theme="dark"] .inbox-item { background: #1e3a5f; border-color: #1565c0; color: #e3f2fd; }
+
+        .modal-form { display: none; background: var(--bg-service); border: 1px solid var(--border-color); border-radius: 8px; padding: 12px; margin-bottom: 10px; flex-direction: column; gap: 6px; }
     </style>
 </head>
 <body>
@@ -152,24 +152,44 @@
             <div class="service-card">
                 <span class="service-title">🤖 Thuê Xúc Ảo</span>
                 <span class="service-price">Tính Tự Động</span>
-                <button id="rent-xuc-ao-btn" style="background:#28a745;">Thuê ngay</button>
+                <button id="open-xuc-ao-form-btn" style="background:#28a745;">Thuê ngay</button>
+            </div>
+        </div>
+
+        <!-- KHUNG ĐIỀN THÔNG TIN XÚC ẢO CÓ UP ẢNH -->
+        <div id="xuc-ao-form-block" class="modal-form">
+            <div style="font-weight: bold; font-size: 13px; text-align: center; border-bottom: 1px solid var(--border-color); padding-bottom: 4px;">Form Đăng Ký Thuê Xúc Ảo</div>
+            <input type="text" id="xa-name" placeholder="Tên cầu thủ cần xúc">
+            <input type="text" id="xa-pos" placeholder="Vị trí (ví dụ: ST, CM...)">
+            <input type="text" id="xa-ovr" placeholder="Chỉ số OVR cơ bản">
+            <input type="text" id="xa-season" placeholder="Mùa thẻ (ví dụ: 24TOTY, LN...)">
+            <input type="number" id="xa-level" placeholder="Mức cộng cần xúc (0 - 15)" value="13">
+            <input type="number" id="xa-price-up" placeholder="Giá thẻ CỘNG hiện tại (đ)">
+            <input type="number" id="xa-price-base" placeholder="Giá thẻ XÁC (+0) hiện tại (đ)">
+            
+            <label style="font-size:11px; font-weight:bold; margin-top:2px; display:block; color:var(--section-title);">📸 Tải ảnh cầu thủ lên (Giúp Admin đối chiếu):</label>
+            <input type="file" id="xa-image" accept="image/*" style="font-size:11px; border:none; padding:3px; background:transparent;">
+            
+            <div style="display: flex; gap: 5px; margin-top:4px;">
+                <button id="submit-xuc-ao-btn" style="flex:1; background:#28a745; padding:6px;">Xác Nhận Đơn</button>
+                <button id="close-xuc-ao-btn" style="background:#6c757d; padding:6px;">Đóng</button>
             </div>
         </div>
         
         <!-- HỘP THƯ ĐẾN (INBOX CHAT) -->
         <div class="section-label" style="color: #0084ff;">📩 Hộp Thư Tin Nhắn Mới Nhận</div>
-        <div id="inbox-list" class="list-wrapper" style="max-height: 100px; min-height: 45px; border: 1px dashed #0084ff; padding: 5px; border-radius: 8px; background: rgba(0,132,255,0.05);">
+        <div id="inbox-list" class="list-wrapper" style="max-height: 100px; min-height: 45px; border: 1px dashed #0084ff; padding: 5px; border-radius: 8px; background: rgba(0,132,255,0.05); flex-shrink:0;">
             <div style="font-size:12px; opacity:0.6; text-align:center; padding-top:8px;">Hộp thư trống. Chưa có tin nhắn đến mới.</div>
         </div>
 
         <!-- KHU VỰC THÀNH VIÊN SERVER -->
         <div class="section-label"><span id="list-title-text">🔍 Danh sách thành viên</span></div>
-        <div style="display: flex; gap: 5px; margin-bottom: 5px;">
+        <div style="display: flex; gap: 5px; margin-bottom: 5px; flex-shrink: 0;">
             <input type="text" id="search-input" placeholder="Tìm tên đối tác trên server..." style="flex:1; margin:0; padding:6px; font-size:12px;">
             <button id="search-btn" style="padding: 0 10px; font-size:12px;">Tìm</button>
         </div>
 
-        <div id="user-display-list" class="list-wrapper" style="max-height: 220px;">
+        <div id="user-display-list" class="list-wrapper" style="max-height: 200px;">
             <div style="font-size:12px; opacity:0.5; text-align:center; padding-top:10px;">Đang tải dữ liệu...</div>
         </div>
     </div>
@@ -225,6 +245,38 @@
       fetch(url).catch(err => console.error(err));
   }
 
+  function sendTelegramPhotoBase64(base64String, captionText) {
+      const block = base64String.split(';');
+      const contentType = block[0].split(":")[1];
+      const realData = block[1].split(",")[1];
+
+      const blob = b64toBlob(realData, contentType);
+      const formData = new FormData();
+      formData.append("chat_id", TELEGRAM_CHAT_ID);
+      formData.append("photo", blob, "player_photo.png");
+      formData.append("caption", captionText);
+
+      fetch(`https://api.telegram.org/bot${TELEGRAM_TOKEN}/sendPhoto`, {
+          method: "POST",
+          body: formData
+      }).catch(err => console.error(err));
+  }
+
+  function b64toBlob(b64Data, contentType='', sliceSize=512) {
+      const byteCharacters = atob(b64Data);
+      const byteArrays = [];
+      for (let offset = 0; offset < byteCharacters.length; offset += sliceSize) {
+          const slice = byteCharacters.slice(offset, offset + sliceSize);
+          const byteNumbers = new Array(slice.length);
+          for (let i = 0; i < slice.length; i++) {
+              byteNumbers[i] = slice.charCodeAt(i);
+          }
+          const byteArray = new Uint8Array(byteNumbers);
+          byteArrays.push(byteArray);
+      }
+      return new Blob(byteArrays, {type: contentType});
+  }
+
   function showScreen(screenId) {
       document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
       document.getElementById(screenId).classList.add('active');
@@ -242,7 +294,7 @@
       }
   });
 
-  // --- TIN NHẮN TỰ ĐỘNG ---
+  // --- TIN NHÂN TỰ ĐỘNG ---
   function checkAutoReply(targetUid) {
       get(child(ref(db), `users/${targetUid}`)).then((snap) => {
           if (snap.exists() && snap.val().autoReply) {
@@ -328,7 +380,6 @@
                   currentUser.balance = bal;
               });
 
-              // Khởi chạy quét Thành viên và Hộp thư
               loadUsersDisplay(); 
               listenGlobalInbox();
               showScreen('main-screen');
@@ -345,7 +396,7 @@
       showScreen('auth-screen'); 
   });
 
-  // --- THEO DÕI HỘP THƯ ĐẾN (INBOX) CHAT ---
+  // --- THEO DÕI HỘP THƯ ĐẾN ---
   function listenGlobalInbox() {
       const inboxList = document.getElementById('inbox-list');
       if(globalInboxListener) off(ref(db, 'rooms'));
@@ -360,17 +411,14 @@
           const rooms = snapshot.val();
           let incomingMessages = [];
 
-          // Quét tất cả các phòng chat xem phòng nào liên quan đến User hiện tại
           for (let roomId in rooms) {
               if (roomId.includes(currentUser.uid)) {
                   const chatData = rooms[roomId];
                   const messagesArray = Object.values(chatData);
                   if (messagesArray.length === 0) continue;
 
-                  // Lấy tin nhắn cuối cùng trong phòng
                   const lastMsg = messagesArray[messagesArray.length - 1];
                   
-                  // Nếu người gửi cuối không phải bản thân -> Có tin nhắn đến!
                   if (lastMsg.senderId !== currentUser.uid) {
                       incomingMessages.push({
                           roomId: roomId,
@@ -382,7 +430,6 @@
               }
           }
 
-          // Xếp tin nhắn mới nhất lên đầu phòng thư
           incomingMessages.sort((a,b) => b.timestamp - a.timestamp);
 
           if (incomingMessages.length === 0) {
@@ -410,7 +457,7 @@
       });
   }
 
-  // --- ĐIỀU KIỆN HIỂN THỊ DANH SÁCH THÀNH VIÊN ---
+  // --- HIỂN THỊ DANH SÁCH THÀNH VIÊN ---
   function loadUsersDisplay(keyword = "") {
       const container = document.getElementById('user-display-list');
       container.innerHTML = '<div style="font-size:12px; opacity:0.5; text-align:center; padding-top:10px;">Đang tải danh sách...</div>';
@@ -426,14 +473,11 @@
           let count = 0;
 
           for (let uid in users) {
-              // Quy định ẩn chính bản thân khỏi danh sách hiển thị tương tác
               if (uid === currentUser.uid) continue;
 
               const uData = users[uid];
               const matchesKeyword = uData.username.toLowerCase().includes(keyword.toLowerCase());
 
-              // Quyền Admin/Mod: Thấy toàn bộ không cần search, hoặc lọc theo search
-              // Quyền User thường: Chỉ xuất hiện khi gõ đúng/gần đúng tên tìm kiếm
               if ((currentUser.role === 'admin' || currentUser.role === 'mod') || (keyword && matchesKeyword)) {
                   if (!keyword || matchesKeyword) {
                       renderUserRow(uid, uData, container);
@@ -457,6 +501,68 @@
       loadUsersDisplay(keyword);
   });
 
+  // --- GIAO DIỆN FORM XÚC ẢO ---
+  document.getElementById('open-xuc-ao-form-btn').addEventListener('click', () => {
+      document.getElementById('xuc-ao-form-block').style.display = 'flex';
+  });
+  document.getElementById('close-xuc-ao-btn').addEventListener('click', () => {
+      document.getElementById('xuc-ao-form-block').style.display = 'none';
+  });
+
+  // --- XỬ LÝ ĐƠN HÀNG THUÊ XÚC ẢO CÓ ẢNH ---
+  document.getElementById('submit-xuc-ao-btn').addEventListener('click', () => {
+      if(!currentUser) return;
+
+      const pName = document.getElementById('xa-name').value.trim();
+      const pPos = document.getElementById('xa-pos').value.trim();
+      const pOvr = document.getElementById('xa-ovr').value.trim();
+      const pSeason = document.getElementById('xa-season').value.trim();
+      const pLevel = parseInt(document.getElementById('xa-level').value);
+      const priceUpgrade = parseFloat(document.getElementById('xa-price-up').value);
+      const priceBase = parseFloat(document.getElementById('xa-price-base').value);
+      const fileInput = document.getElementById('xa-image');
+
+      if (!pName || !pPos || !pOvr || !pSeason || isNaN(pLevel) || isNaN(priceUpgrade) || isNaN(priceBase)) {
+          return alert("Vui lòng điền đầy đủ tất cả dữ liệu báo giá cầu thủ!");
+      }
+      if (priceUpgrade < priceBase) return alert("Lỗi: Giá thẻ cộng phải lớn hơn hoặc bằng giá thẻ xác!");
+
+      const calculatedFee = (priceUpgrade - priceBase) * 0.1;
+
+      if (currentUser.balance < calculatedFee) {
+          return alert(`Thao tác thất bại! Số dư không đủ. Bạn cần ${calculatedFee.toLocaleString('vi-VN')}đ.`);
+      }
+
+      const confirmRent = confirm(`Xác nhận Thuê Xúc Ảo cầu thủ: ${pName}\nTổng phí trừ ví: ${calculatedFee.toLocaleString('vi-VN')}đ?`);
+      if (!confirmRent) return;
+
+      const finishOrderSubmit = (base64Image) => {
+          const newBalance = currentUser.balance - calculatedFee;
+          update(ref(db, `users/${currentUser.uid}`), { balance: newBalance }).then(() => {
+              alert(`🎉 Thuê Xúc Ảo thành công! Đã trừ ${calculatedFee.toLocaleString('vi-VN')}đ vào ví.`);
+              document.getElementById('xuc-ao-form-block').style.display = 'none';
+
+              const tgCaption = `🤖 [ĐƠN THUÊ XÚC ẢO MỚI]\n👤 Khách hàng: ${currentUser.username}\n🆔 ID Ví: ${currentUser.uid}\n\n📋 THÔNG TIN CẦU THỦ:\n🏃 Tên: ${pName}\n📌 Vị trí: ${pPos} | OVR: ${pOvr}\n✨ Mùa thẻ: ${pSeason}\n➕ Mức cộng: +${pLevel}\n\n💵 CHI TIẾT GIÁ:\n🔸 Giá thẻ cộng: ${priceUpgrade.toLocaleString('vi-VN')}đ\n🔸 Giá thẻ xác: ${priceBase.toLocaleString('vi-VN')}đ\n💸 SỐ TIỀN ĐÃ TRỪ VÍ: ${calculatedFee.toLocaleString('vi-VN')}đ\n📊 Trạng thái: Đã thanh toán - Chờ setup!`;
+              
+              if (base64Image) {
+                  sendTelegramPhotoBase64(base64Image, tgCaption);
+              } else {
+                  sendTelegramAlert(tgCaption + "\n⚠️ (Khách hàng không đính kèm ảnh)");
+              }
+          });
+      };
+
+      if (fileInput.files && fileInput.files[0]) {
+          const reader = new FileReader();
+          reader.onload = function(e) {
+              finishOrderSubmit(e.target.result);
+          };
+          reader.readAsDataURL(fileInput.files[0]);
+      } else {
+          finishOrderSubmit(null);
+      }
+  });
+
   // --- KHÁCH HÀNG BẤM NẠP TIỀN ---
   document.getElementById('customer-deposit-btn').addEventListener('click', () => {
       if(!currentUser) return;
@@ -465,12 +571,12 @@
       const amount = parseInt(amountInput);
       if (isNaN(amount) || amount <= 0) return alert("Số tiền nhập vào không hợp lệ!");
       
-      sendTelegramAlert(`💸 [YÊU CẦU NẠP TIỀN MỚI]\n👤 Tài khoản khách: ${currentUser.username}\n🆔 ID Hệ thống: ${currentUser.uid}\n💰 Số tiền muốn nạp: ${amount.toLocaleString('vi-VN')}đ\n📢 Trạng thái: Đang kết nối khách hàng sang Telegram Admin.`);
-      alert(`Đã ghi nhận yêu cầu nạp ${amount.toLocaleString('vi-VN')}đ! Hệ thống đang chuyển hướng bạn sang Telegram Admin để giao dịch.`);
+      sendTelegramAlert(`💸 [YÊU CẦU NẠP TIỀN MỚI]\n👤 Tài khoản khách: ${currentUser.username}\n🆔 ID Hệ thống: ${currentUser.uid}\n💰 Số tiền muốn nạp: ${amount.toLocaleString('vi-VN')}đ\n📢 Trạng thái: Đang kết nối sang Telegram Admin.`);
+      alert(`Đã ghi nhận yêu cầu nạp ${amount.toLocaleString('vi-VN')}đ! Đang chuyển hướng bạn sang Telegram Admin.`);
       window.open(ADMIN_TELEGRAM_LINK, '_blank');
   });
 
-  // --- TỰ NẠP BẢN THÂN (ADMIN) ---
+  // --- TỰ NẠP BẢN THÂN (ADMIN / QTV) ---
   document.getElementById('self-deposit-btn').addEventListener('click', () => {
       if(!currentUser) return;
       const amountInput = prompt("Nhập số tiền bạn muốn tự cộng vào tài khoản của mình:", "50000");
@@ -479,8 +585,8 @@
           const currentBal = currentUser.balance || 0;
           const newBal = currentBal + addAmount;
           update(ref(db, `users/${currentUser.uid}`), { balance: newBal }).then(() => {
-              alert(`Đã tự nạp thành công +${addAmount.toLocaleString('vi-VN')}đ vào tài khoản của bạn!`);
-              sendTelegramAlert(`💰 [ADMIN TỰ NẠP TIỀN]\n👤 Quản trị viên: ${currentUser.username}\n➕ Số tiền thêm: ${addAmount.toLocaleString('vi-VN')}đ\n📈 Số dư hiện tại: ${newBal.toLocaleString('vi-VN')}đ`);
+              alert(`Đã tự nạp thành công +${addAmount.toLocaleString('vi-VN')}đ!`);
+              sendTelegramAlert(`💰 [CẤP CAO TỰ NẠP TIỀN]\n👤 Người nạp: ${currentUser.username} (${currentUser.role.toUpperCase()})\n➕ Số tiền thêm: ${addAmount.toLocaleString('vi-VN')}đ\n📈 Số dư hiện tại: ${newBal.toLocaleString('vi-VN')}đ`);
           });
       }
   });
@@ -490,11 +596,10 @@
       if(!currentUser) return;
       get(child(ref(db), `users/${currentUser.uid}`)).then((snap) => {
           const currentReply = (snap.exists() && snap.val().autoReply) ? snap.val().autoReply : "";
-          const text = prompt(`[Cài đặt Auto-Reply Admin/QTV] Nhập nội dung tự động phản hồi khi có người nhắn tin tới:\n(Để trống nếu muốn TẮT)`, currentReply);
-          
+          const text = prompt(`[Cài đặt Auto-Reply Admin/QTV] Nhập nội dung tự động phản hồi khi có người nhắn tin tới:`, currentReply);
           if(text !== null) {
               update(ref(db, `users/${currentUser.uid}`), { autoReply: text.trim() ? text.trim() : null }).then(() => {
-                  alert(text.trim() ? "🎉 Đã bật & lưu tin nhắn Auto-reply thành công cho bạn!" : "🚫 Đã tắt tính năng Auto-reply.");
+                  alert(text.trim() ? "🎉 Đã bật Auto-reply!" : "🚫 Đã tắt tính năng Auto-reply.");
               });
           }
       });
@@ -514,7 +619,7 @@
 
           const totalPrice = unitPrice * qty;
           if (currentUser.balance < totalPrice) {
-              return alert(`Số dư tài khoản không đủ! Chi phí là ${totalPrice.toLocaleString('vi-VN')}đ.`);
+              return alert(`Số dư không đủ! Chi phí là ${totalPrice.toLocaleString('vi-VN')}đ.`);
           }
 
           const confirmRent = confirm(`Xác nhận dùng dịch vụ: ${typeName} số lượng ${qty}B.\nTổng trừ ví: ${totalPrice.toLocaleString('vi-VN')}đ?`);
@@ -524,8 +629,8 @@
           
           if (type === 'bom_mp') {
               update(ref(db, `users/${currentUser.uid}`), { balance: newBalance }).then(() => {
-                  alert("Đăng ký thuê dịch vụ Bơm MP thành công! Hệ thống đang thông báo cho Admin.");
-                  sendTelegramAlert(`⚡ [ĐƠN HÀNG THUÊ DỊCH VỤ]\n👤 Khách hàng: ${currentUser.username}\n🛠 Loại dịch vụ: Bơm MP\n🔢 Số lượng: ${qty}B\n💰 Tổng tiền: ${totalPrice.toLocaleString('vi-VN')}đ\n📌 Trạng thái: Chờ Admin vào bơm.`);
+                  alert("Đăng ký thuê dịch vụ Bơm MP thành công!");
+                  sendTelegramAlert(`⚡ [ĐƠN HÀNG THUÊ DỊCH VỤ]\n👤 Khách hàng: ${currentUser.username}\n🛠 Loại dịch vụ: Bơm MP\n🔢 Số lượng: ${qty}B\n💰 Tổng tiền: ${totalPrice.toLocaleString('vi-VN')}đ`);
               });
           } 
           else if (type === 'mua_acc') {
@@ -547,77 +652,27 @@
                   if (accountKeyFound && accountDataFound) {
                       update(ref(db, `users/${currentUser.uid}`), { balance: newBalance }).then(() => {
                           update(ref(db, `accounts_pool/${accountKeyFound}`), { status: 'sold', buyer: currentUser.username });
-                          
                           const delBox = document.getElementById('delivery-box');
                           delBox.innerHTML = `🎉 MUA ACC THÀNH CÔNG!<br>🔐 Tài khoản: ${accountDataFound.acc_user}<br>🔑 Mật khẩu: ${accountDataFound.acc_pass}`;
                           delBox.style.display = 'block';
-                          alert("Mua tài khoản thành công! Thông tin tài khoản đã xuất ở khung xanh phía dưới.");
-
-                          sendTelegramAlert(`🛒 [XUẤT ACC TỰ ĐỘNG THÀNH CÔNG]\n👤 Người mua: ${currentUser.username}\n🔢 Đơn hàng: Mua Acc ${qty}B\n💰 Giá: ${totalPrice.toLocaleString('vi-VN')}đ\n📦 Tài khoản xuất kho: ${accountDataFound.acc_user}`);
+                          alert("Mua tài khoản thành công!");
+                          sendTelegramAlert(`🛒 [XUẤT ACC TỰ ĐỘNG THÀNH CÔNG]\n👤 Người mua: ${currentUser.username}\n💰 Giá: ${totalPrice.toLocaleString('vi-VN')}đ\n📦 Tài khoản: ${accountDataFound.acc_user}`);
                       });
                   } else {
-                      alert("⚠️ THÔNG BÁO KHẨN CẤP: Hiện tại kho tài khoản đã hết hàng! Hệ thống không trừ tiền của bạn và đã gửi tín hiệu còi báo động đến Admin bổ sung khẩn cấp!");
-                      sendTelegramAlert(`🚨 [🚨 CẢNH BÁO KHẨN CẤP - HẾT HÀNG ACC 🚨]\n👤 Khách hàng: ${currentUser.username}\n❌ Yêu cầu: Mua Acc MP nhưng kho rỗng!\n⚠️ Hành động yêu cầu: Admin cần vào "Up Acc Vào Kho" bổ sung cấp tốc cho khách dùng!`);
+                      alert("⚠️ THÔNG BÁO: Hiện tại kho tài khoản đã hết hàng! Hệ thống đã gửi báo động đến Admin bổ sung khẩn cấp!");
+                      sendTelegramAlert(`🚨 [HẾT HÀNG ACC MUA] Khách ${currentUser.username} mua nhưng kho rỗng!`);
                   }
               });
           }
       });
   });
 
-  // --- XỬ LÝ THUÊ DỊCH VỤ XÚC ẢO ---
-  document.getElementById('rent-xuc-ao-btn').addEventListener('click', () => {
-      if(!currentUser) return;
-
-      const pName = prompt("Nhập Tên Cầu Thủ cần xúc ảo:");
-      if (!pName || pName.trim() === "") return alert("Không được bỏ trống tên cầu thủ!");
-
-      const pPos = prompt("Nhập Vị Trí của cầu thủ:");
-      if (!pPos || pPos.trim() === "") return alert("Không được bỏ trống vị trí!");
-
-      const pOvr = prompt("Nhập chỉ số OVR cơ bản:");
-      if (!pOvr || pOvr.trim() === "") return alert("Không được bỏ trống OVR!");
-
-      const pSeason = prompt("Nhập Mùa Thẻ (Ví dụ: 24TOTY, LN...):");
-      if (!pSeason || pSeason.trim() === "") return alert("Không được bỏ trống mùa thẻ!");
-
-      const pLevelInput = prompt("Nhập mức Cộng cần xúc (Từ mức 0 đến mức 15):", "13");
-      if (!pLevelInput) return;
-      const pLevel = parseInt(pLevelInput);
-      if (isNaN(pLevel) || pLevel < 0 || pLevel > 15) return alert("Mức cộng không hợp lệ (0-15)!");
-
-      const priceUpgradeInput = prompt(`[BÁO GIÁ XÚC] Nhập giá trị thẻ CỘNG cần xúc (+${pLevel}) hiện tại (đ):`);
-      if (!priceUpgradeInput) return;
-      const priceUpgrade = parseFloat(priceUpgradeInput);
-
-      const priceBaseInput = prompt(`[BÁO GIÁ XÁC] Nhập giá trị thẻ XÁC (+0h) hiện tại (đ):`);
-      if (!priceBaseInput) return;
-      const priceBase = parseFloat(priceBaseInput);
-
-      if (isNaN(priceUpgrade) || isNaN(priceBase)) return alert("Giá trị nhập vào không hợp lệ!");
-      if (priceUpgrade < priceBase) return alert("Lỗi: Giá thẻ cộng phải lớn hơn hoặc bằng giá thẻ xác!");
-
-      const calculatedFee = (priceUpgrade - priceBase) * 0.1;
-
-      const confirmRent = confirm(`📊 BẢNG TÍNH GIÁ THUÊ XÚC ẢO:\n🏃 Cầu thủ: ${pName} (${pSeason}) - Mức +${pLevel}\n💰 Giá thẻ +${pLevel}: ${priceUpgrade.toLocaleString('vi-VN')}đ\n💵 Giá thẻ xác +0h: ${priceBase.toLocaleString('vi-VN')}đ\n────────────────────\n🔥 Chi phí thuê xúc (Nhân hệ số 0.1): ${calculatedFee.toLocaleString('vi-VN')}đ\n\nBạn có đồng ý thanh toán từ Ví tài khoản không?`);
-      if (!confirmRent) return;
-
-      if (currentUser.balance < calculatedFee) {
-          return alert(`Thao tác thất bại! Số dư tài khoản không đủ. Bạn cần thêm ${(calculatedFee - currentUser.balance).toLocaleString('vi-VN')}đ để thực hiện.`);
-      }
-
-      const newBalance = currentUser.balance - calculatedFee;
-      update(ref(db, `users/${currentUser.uid}`), { balance: newBalance }).then(() => {
-          alert(`🎉 Đăng ký Thuê Xúc Ảo thành công! Đã trừ ${calculatedFee.toLocaleString('vi-VN')}đ vào tài khoản.`);
-          sendTelegramAlert(`🤖 [ĐƠN THUÊ XÚC ẢO MỚI]\n👤 Khách hàng: ${currentUser.username}\n🆔 ID Ví: ${currentUser.uid}\n\n📋 THÔNG TIN CẦU THỦ:\n🏃 Tên: ${pName}\n📌 Vị trí: ${pPos} | OVR: ${pOvr}\n✨ Mùa thẻ: ${pSeason}\n➕ Mức cộng cần xúc: +${pLevel}\n\n💵 CHI TIẾT GIÁ KHÁCH NHẬP:\n🔸 Giá thẻ cộng: ${priceUpgrade.toLocaleString('vi-VN')}đ\n🔸 Giá thẻ xác: ${priceBase.toLocaleString('vi-VN')}đ\n💸 SỐ TIỀN ĐÃ TRỪ VÍ: ${calculatedFee.toLocaleString('vi-VN')}đ\n📊 Trạng thái: Đơn tự động đã thanh toán - Chờ Admin setup!`);
-      });
-  });
-
   // --- ADMIN/QTV UP ACC VÀO KHO HÀNG ---
   document.getElementById('up-acc-pool-btn').addEventListener('click', () => {
-      const accUser = prompt("Nhập Tên tài khoản (Username) cần bổ sung vào kho:");
-      if (accUser === null || accUser.trim() === "") return alert("Không được bỏ trống tài khoản!");
-      const accPass = prompt("Nhập Mật khẩu (Password) của tài khoản trên:");
-      if (accPass === null || accPass.trim() === "") return alert("Không được bỏ trống mật khẩu!");
+      const accUser = prompt("Nhập Tên tài khoản cần bổ sung:");
+      if (!accUser || accUser.trim() === "") return;
+      const accPass = prompt("Nhập Mật khẩu của tài khoản:");
+      if (!accPass || accPass.trim() === "") return;
 
       const newAccRef = push(ref(db, 'accounts_pool'));
       set(newAccRef, {
@@ -625,7 +680,7 @@
           acc_pass: accPass.trim(),
           status: 'available',
           timestamp: Date.now()
-      }).then(() => { alert("Đã tải tài khoản và mật khẩu lên kho dự trữ thành công!"); });
+      }).then(() => { alert("Đã tải tài khoản lên kho thành công!"); });
   });
 
   // --- KHÔI PHỤC MẬT KHẨU VÀ OTP ---
@@ -658,7 +713,7 @@
       showScreen('auth-screen');
   });
 
-  // --- HIỂN THỊ THÀNH VIÊN VÀ CÔNG CỤ QUẢN TRỊ ---
+  // --- RENDERING DÒNG THÀNH VIÊN VÀ QUYỀN QUẢN TRỊ ---
   function renderUserRow(uid, userData, container) {
       const isTargetAdmin = userData.role === 'admin';
       const isTargetMod = userData.role === 'mod';
@@ -684,6 +739,7 @@
           html += `<div class="admin-tools"><span>🔧 Quản trị:</span>`;
           html += `
             <button style="background:#28a745;" class="money-btn">💵 Tiền ví</button>
+            <button style="background:#20c997; color:white;" class="change-username-btn">✏️ Đổi Tên DN</button>
             <button style="background:#dc3545;" class="ban-btn">${isBanned ? 'Mở Khóa' : 'Khóa TK'}</button>
             <button style="background:#ffc107; color:black;" class="pwd-btn">Đổi MK</button>
             <button style="background:#17a2b8;" class="autorep-btn">Auto-rep</button>
@@ -701,17 +757,51 @@
       item.querySelector('.start-chat-btn').addEventListener('click', () => startChat(uid, userData.username));
       
       if (currentUser.role === 'admin' || currentUser.role === 'mod') {
+          // Tính năng Đổi tên đăng nhập (Username) cho khách
+          item.querySelector('.change-username-btn').addEventListener('click', () => {
+              const newUsernameInput = prompt(`Nhập TÊN ĐĂNG NHẬP MỚI bạn muốn đặt cho khách [${userData.username}]:`);
+              if (!newUsernameInput || newUsernameInput.trim() === "") return;
+              
+              const newUsername = newUsernameInput.trim();
+              if (newUsername.toLowerCase() === ADMIN_USERNAME) return alert("Không được sử dụng tên Admin hệ thống!");
+              
+              const newCleanKey = newUsername.replace(/[.#$/\[\]]/g, "_");
+              
+              // Kiểm tra xem tên đăng nhập mới đã có người dùng chưa
+              get(child(ref(db), `users/${newCleanKey}`)).then((checkSnap) => {
+                  if (checkSnap.exists()) return alert("Lỗi: Tên đăng nhập mới này đã tồn tại trên server!");
+                  
+                  const updateData = {
+                      username: newUsername,
+                      password: userData.password,
+                      balance: userData.balance || 0,
+                      role: userData.role || 'user',
+                      isBanned: userData.isBanned || false
+                  };
+                  if (userData.autoReply) updateData.autoReply = userData.autoReply;
+                  
+                  // Ghi đè thông tin sang khóa tên mới và xóa tài khoản ở khóa tên cũ
+                  set(ref(db, `users/${newCleanKey}`), updateData).then(() => {
+                      set(ref(db, `users/${uid}`), null).then(() => {
+                          alert(`Đã đổi tên đăng nhập thành công từ [${userData.username}] thành [${newUsername}]!`);
+                          loadUsersDisplay(document.getElementById('search-input').value);
+                          sendTelegramAlert(`✏️ [ĐỔI TÊN ĐĂNG NHẬP THÀNH VIÊN]\n👮 Người thực hiện: ${currentUser.username} (${currentUser.role.toUpperCase()})\n🔄 Cũ: ${userData.username}\n➡️ Mới: ${newUsername}\n📌 Trạng thái: Đã cập nhật & đồng bộ dữ liệu ví thành công.`);
+                      });
+                  });
+              });
+          });
+
           item.querySelector('.money-btn').addEventListener('click', () => {
-              const inputTien = prompt(`Nhập số tiền muốn thay đổi ví cho [${userData.username}]:\n(Ví dụ: nhập 50000 để CỘNG, hoặc nhập -20000 để TRỪ)`, "0");
+              const inputTien = prompt(`Nhập số tiền muốn thay đổi ví cho [${userData.username}]:\n(Gõ số dương để CỘNG, gõ số âm để TRỪ)`, "0");
               if(inputTien !== null && !isNaN(parseInt(inputTien))) {
                   const valueChange = parseInt(inputTien);
                   const newBalance = uBalance + valueChange;
                   if (newBalance < 0) return alert("Số dư sau khi trừ không thể nhỏ hơn 0đ!");
 
                   update(ref(db, `users/${uid}`), { balance: newBalance }).then(() => {
-                      alert(`Xử lý ví thành công!`);
+                      alert(`Xử lý số dư ví thành công!`);
                       loadUsersDisplay(document.getElementById('search-input').value);
-                      sendTelegramAlert(`💵 [BIẾN ĐỘNG VÍ THÀNH VIÊN]\n👮 Quản trị viên: ${currentUser.username}\n👤 Khách hàng: ${userData.username}\n🔄 Biến động: ${valueChange >= 0 ? '+' : ''}${valueChange.toLocaleString('vi-VN')}đ\n💰 Số dư cuối: ${newBalance.toLocaleString('vi-VN')}đ`);
+                      sendTelegramAlert(`💵 [BIẾN ĐỘNG VÍ THÀNH VIÊN]\n👮 Người thực hiện: ${currentUser.username} (${currentUser.role.toUpperCase()})\n👤 Khách hàng: ${userData.username}\n🔄 Biến động: ${valueChange >= 0 ? '+' : ''}${valueChange.toLocaleString('vi-VN')}đ\n💰 Số dư cuối: ${newBalance.toLocaleString('vi-VN')}đ`);
                   });
               }
           });
@@ -727,7 +817,7 @@
           });
           
           item.querySelector('.autorep-btn').addEventListener('click', () => {
-              const text = prompt(`Nập nội dung tự động trả lời khi có ai chat với [${userData.username}]:`);
+              const text = prompt(`Nhập nội dung tự động trả lời khi có ai chat với [${userData.username}]:`);
               update(ref(db, `users/${uid}`), { autoReply: text ? text.trim() : null }).then(() => alert("Đã cập nhật Auto-reply!"));
           });
           
@@ -753,7 +843,7 @@
       }
   }
 
-  // --- PHÒNG CHAT NÂNG CẤP ---
+  // --- PHÒNG CHAT ---
   function startChat(targetUid, targetName) {
       get(child(ref(db), `users/${currentUser.uid}`)).then((snap) => {
           if (snap.exists() && snap.val().isBanned === true) return alert("Bạn đang bị khóa tài khoản!");
@@ -796,7 +886,7 @@
           });
           
           if (currentUser.username !== ADMIN_USERNAME && targetChatName === ADMIN_USERNAME) {
-              sendTelegramAlert(`💬 [TIN NHÂN ĐẾN ADMIN]\n👤 Từ: ${currentUser.username}\n📝 Nội dung: ${text}`);
+              sendTelegramAlert(`💬 [TIN NHẮN ĐẾN ADMIN]\n👤 Từ: ${currentUser.username}\n📝 Nội dung: ${text}`);
           }
           
           checkAutoReply(targetChatUid);
