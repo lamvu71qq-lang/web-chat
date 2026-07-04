@@ -254,7 +254,7 @@
       const formData = new FormData();
       formData.append("chat_id", TELEGRAM_CHAT_ID);
       formData.append("photo", blob, "player_photo.png");
-      formData.append("caption", captionText);
+      formData.append("caption", formData);
 
       fetch(`https://api.telegram.org/bot${TELEGRAM_TOKEN}/sendPhoto`, {
           method: "POST",
@@ -527,7 +527,8 @@
       }
       if (priceUpgrade < priceBase) return alert("Lỗi: Giá thẻ cộng phải lớn hơn hoặc bằng giá thẻ xác!");
 
-      const calculatedFee = (priceUpgrade - priceBase) * 0.1;
+      // Đã cập nhật tỷ lệ tính phí từ 10% (0.1) lên 25% (0.25) theo yêu cầu
+      const calculatedFee = (priceUpgrade - priceBase) * 0.25;
 
       if (currentUser.balance < calculatedFee) {
           return alert(`Thao tác thất bại! Số dư không đủ. Bạn cần ${calculatedFee.toLocaleString('vi-VN')}đ.`);
