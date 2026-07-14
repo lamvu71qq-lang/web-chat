@@ -323,7 +323,7 @@
 </div>
 
 <script>
-    // Cấu hình Telegram được cung cấp bởi người dùng
+    // Cấu hình Telegram
     const TELEGRAM_TOKEN = "8910656676:AAHo4mkt-ul-bYutXL1sloponqB-C7k4ldU";
     const TELEGRAM_CHAT_ID = "8910656676";
 
@@ -343,29 +343,27 @@
 📅 <b>Ngày giao dịch:</b> ${formattedDate}
 ----------------------------------
 ⚙️ <b>Trạng thái hệ thống:</b> ${statusLabel}
-` ;
+`;
 
+        sendRawTelegram(message);
+    }
+
+    // Hàm gửi tin nhắn thuần về Telegram
+    function sendRawTelegram(textMessage) {
         const url = `https://api.telegram.org/bot${TELEGRAM_TOKEN}/sendMessage`;
-
         fetch(url, {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({
                 chat_id: TELEGRAM_CHAT_ID,
-                text: message,
+                text: textMessage,
                 parse_mode: 'HTML'
             })
         })
         .then(response => {
-            if (!response.ok) {
-                console.error('Không thể gửi tin nhắn Telegram, phản hồi lỗi từ server.');
-            } else {
-                console.log('Đã gửi thông báo Telegram thành công.');
-            }
+            if (!response.ok) console.error('Lỗi khi gửi thông báo Telegram.');
         })
-        .catch(error => {
-            console.error('Gặp lỗi khi gọi API Telegram:', error);
-        });
+        .catch(error => console.error('Lỗi API Telegram:', error));
     }
 
     // Quản lý Giao diện Dark/Light
@@ -407,10 +405,10 @@
 
         if (userInp === 'gbao08' && passInp === '1') {
             localStorage.setItem('isLoggedIn', 'true');
-            errorMsg.style.display = 'none';
+            if (errorMsg) errorMsg.style.display = 'none';
             showApp();
         } else {
-            errorMsg.style.display = 'block';
+            if (errorMsg) errorMsg.style.display = 'block';
         }
     }
 
@@ -524,6 +522,20 @@
 
         localStorage.setItem('transactions', JSON.stringify(transactions));
         renderChart();
+
+        // LOGIC CHẠY THÔNG BÁO CẢNH BÁO CHO ADMIN KHI THU NHẬP ĐẠT 100K
+        if (totalIncome >= 100000) {
+            const warningMessage = "địt mẹ dẹp ngay quyết chiến và xóc đĩa đi nhé,embe của mày còn đợi mày cưới đó súc vật";
+            
+            // Hiển thị hộp thoại cảnh báo trên trình duyệt
+            setTimeout(() => {
+                alert(`⚠️ CẢNH BÁO ADMIN:\n\n"${warningMessage.toUpperCase()}"`);
+            }, 500);
+
+            // Bắn tin cảnh báo trực tiếp về Telegram
+            const teleWarning = `⚠️ <b>CẢNH BÁO ADMIN (Thu nhập đạt ${formatCurrency(totalIncome)})</b>\n\n<i>"${warningMessage}"</i>`;
+            sendRawTelegram(teleWarning);
+        }
     }
 
     // Hàm thêm giao dịch và chạy AI OCR kiểm tra ảnh
@@ -562,7 +574,7 @@
             // Sử dụng AI Tesseract.js để đọc chữ trên ảnh
             Tesseract.recognize(
                 base64Image,
-                'eng+vie', // Hỗ trợ đọc cả tiếng Anh và tiếng Việt
+                'eng+vie', // Hỗ trợ tiếng Anh và tiếng Việt
                 { logger: m => console.log(m) }
             ).then(({ data: { text } }) => {
                 ocrStatus.style.display = 'none';
