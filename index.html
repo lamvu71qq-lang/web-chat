@@ -6,8 +6,33 @@
     <title>Hệ Thống Duyệt Bill Tài Chính Nghiêm Ngặt</title>
     <!-- Tailwind CSS -->
     <script src="https://cdn.tailwindcss.com"></script>
+    
+    <!-- TÍCH HỢP FIREBASE (Bản Firebase v9 SDK rút gọn) -->
+    <script type="module">
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/9.22.1/firebase-app.js";
+        import { getDatabase, ref, set, push, onValue, update, remove } from "https://www.gstatic.com/firebasejs/9.22.1/firebase-database.js";
+
+        // Cấu hình Firebase Realtime Database của bạn đã được chèn tại đây
+        const firebaseConfig = {
+            databaseURL: "https://thunhap-edb13-default-rtdb.firebaseio.com/"
+        };
+
+        // Khởi tạo Firebase
+        const app = initializeApp(firebaseConfig);
+        const db = getDatabase(app);
+
+        // Đẩy biến db và các hàm thao tác ra phạm vi window để các chức năng cũ gọi được
+        window.db = db;
+        window.dbRef = ref;
+        window.dbSet = set;
+        window.dbPush = push;
+        window.dbOnValue = onValue;
+        window.dbUpdate = update;
+        window.dbRemove = remove;
+    </script>
+
     <script>
-        // Khởi tạo Dark Mode
+        // Khởi tạo Dark Mode nhanh
         if (localStorage.getItem('theme') === 'dark' || (!('theme' in localStorage) && window.matchMedia('(prefers-color-scheme: dark)').matches)) {
             document.documentElement.classList.add('dark');
         } else {
@@ -69,13 +94,13 @@
 
         <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
             
-            <!-- CỘT TRÁI: Nhập giao dịch chờ duyệt / Quản lý admin -->
+            <!-- CỘT TRÁI: Form & Quản lý -->
             <div class="md:col-span-1 space-y-6">
                 
-                <!-- Quản lý Thành Viên (Chỉ Admin "pwuyn") -->
+                <!-- Quản lý Thành Viên (Chỉ hiển thị với Admin pwuyn) -->
                 <div id="adminPanel" class="bg-white dark:bg-gray-800 p-6 rounded-2xl shadow-sm border border-gray-100 dark:border-gray-700 hidden">
                     <h2 class="text-lg font-semibold text-gray-700 dark:text-gray-200 mb-4 flex items-center gap-2">
-                        <span>👥</span> Quản Lý Thành Viên (Admin)
+                        <span>👥</span> Quản Lý Thành Viên (Database)
                     </h2>
                     <form id="createUserForm" class="space-y-3">
                         <div>
@@ -87,14 +112,14 @@
                             <input type="password" id="newPassword" required placeholder="Mật khẩu" class="mt-1 w-full p-2 bg-gray-50 dark:bg-gray-700 border border-gray-200 dark:border-gray-600 rounded-lg text-sm focus:ring-2 focus:ring-blue-500 outline-none">
                         </div>
                         <button type="submit" class="w-full bg-gray-800 hover:bg-gray-950 dark:bg-blue-600 dark:hover:bg-blue-700 text-white font-medium py-1.5 rounded-lg text-xs transition-colors">
-                            Tạo Tài Khoản
+                            Tạo Tài Khoản Lên Cloud
                         </button>
                     </form>
                     
                     <div class="mt-4 pt-4 border-t border-gray-100 dark:border-gray-700">
-                        <p class="text-xs font-bold text-gray-400 uppercase mb-2">Danh sách tài khoản:</p>
+                        <p class="text-xs font-bold text-gray-400 uppercase mb-2">Danh sách tài khoản đồng bộ:</p>
                         <ul id="userList" class="text-xs text-gray-600 dark:text-gray-300 space-y-1 divide-y divide-gray-50 dark:divide-gray-700">
-                            <!-- JS tự render -->
+                            <!-- JS tự render từ DB -->
                         </ul>
                     </div>
                 </div>
@@ -102,12 +127,12 @@
                 <!-- Thiết Lập Mục Tiêu (User) -->
                 <div id="userTargetPanel" class="bg-white dark:bg-gray-800 p-6 rounded-2xl shadow-sm border border-gray-100 dark:border-gray-700 hidden">
                     <h2 class="text-base font-bold text-gray-700 dark:text-gray-200 mb-3 flex items-center gap-2">
-                        <span>🎯</span> Mục Tiêu Cá Nhân (Bảo Mật)
+                        <span>🎯</span> Mục Tiêu Cá Nhân (Bảo Mật Local)
                     </h2>
-                    <p class="text-[11px] text-gray-400 mb-3">Cấu hình lưu tại máy của bạn, Admin không nhìn thấy!</p>
+                    <p class="text-[11px] text-gray-400 mb-3">Cấu hình lưu tại máy cá nhân của bạn để bảo mật.</p>
                     <form id="targetForm" class="space-y-3">
                         <div>
-                            <label class="block text-[10px] font-bold text-gray-500 dark:text-gray-400 uppercase">Thu nhập muốn đạt (VNĐ)</label>
+                            <label class="block text-[10px] font-bold text-gray-500 dark:text-gray-400 uppercase">Thu nhập mong muốn (VNĐ)</label>
                             <input type="number" id="targetAmount" placeholder="Ví dụ: 20000000" class="mt-1 w-full p-2 bg-gray-50 dark:bg-gray-700 border border-gray-200 dark:border-gray-600 rounded-lg text-sm focus:ring-2 focus:ring-amber-500 outline-none">
                         </div>
                         <div>
@@ -115,15 +140,15 @@
                             <textarea id="targetMsg" placeholder="Nỗ lực được đền đáp xứng đáng!" rows="2" class="mt-1 w-full p-2 bg-gray-50 dark:bg-gray-700 border border-gray-200 dark:border-gray-600 rounded-lg text-sm focus:ring-2 focus:ring-amber-500 outline-none resize-none"></textarea>
                         </div>
                         <button type="submit" class="w-full bg-amber-500 hover:bg-amber-600 text-white font-medium py-1.5 rounded-lg text-xs transition-colors">
-                            Lưu mục tiêu cá nhân
+                            Lưu mục tiêu
                         </button>
                     </form>
                 </div>
 
-                <!-- Form Gửi Yêu Cầu Giao Dịch (Chờ duyệt) -->
+                <!-- Form Gửi Yêu Cầu Giao Dịch -->
                 <div class="bg-white dark:bg-gray-800 p-6 rounded-2xl shadow-sm border border-gray-100 dark:border-gray-700">
                     <h2 class="text-lg font-semibold text-gray-700 dark:text-gray-200 mb-2">✍️ Khai Báo Giao Dịch</h2>
-                    <p class="text-xs text-amber-500 mb-4">⚠️ Mọi giao dịch tạo ở đây sẽ ở trạng thái "Chờ duyệt". Chỉ được cộng/trừ tiền sau khi Admin pwuyn kiểm tra xác thực.</p>
+                    <p class="text-xs text-amber-500 mb-4">⚠️ Mọi giao dịch tạo ở đây sẽ đẩy lên Cloud trạng thái "Chờ duyệt". Chỉ được cộng/trừ tiền sau khi Admin pwuyn phê chuẩn.</p>
                     <form id="transactionForm" class="space-y-4">
                         <div>
                             <label class="block text-xs font-bold text-gray-500 dark:text-gray-400 uppercase">Loại đề xuất</label>
@@ -153,14 +178,14 @@
                 </div>
             </div>
 
-            <!-- CỘT PHẢI: Hộp thư Chờ duyệt (Admin) & Lịch sử chính -->
+            <!-- CỘT PHẢI: Bảng Duyệt & Lịch Sử -->
             <div class="md:col-span-2 space-y-6">
                 
                 <!-- BẢNG DUYỆT BILL (CHỈ HIỂN THỊ VỚI ADMIN) -->
                 <div id="adminApprovalPanel" class="bg-yellow-50/50 dark:bg-yellow-950/10 p-6 rounded-2xl shadow-sm border border-yellow-200 dark:border-yellow-900/50 hidden">
                     <div class="flex items-center justify-between mb-4">
                         <h2 class="text-lg font-bold text-yellow-800 dark:text-yellow-400 flex items-center gap-2">
-                            <span>📥</span> Hộp Thư Chờ Duyệt Bill (Admin)
+                            <span>📥</span> Hộp Thư Chờ Duyệt Bill (Toàn Hệ Thống)
                         </h2>
                         <span id="pendingCount" class="bg-yellow-200 dark:bg-yellow-900 text-yellow-800 dark:text-yellow-300 text-xs font-bold px-2 py-0.5 rounded-full">0 yêu cầu</span>
                     </div>
@@ -176,7 +201,7 @@
                                 </tr>
                             </thead>
                             <tbody id="pendingTable" class="divide-y divide-yellow-100 dark:divide-yellow-900/30">
-                                <!-- Chèn danh sách chờ duyệt -->
+                                <!-- Đồng bộ từ DB -->
                             </tbody>
                         </table>
                     </div>
@@ -185,7 +210,7 @@
                 <!-- Lịch sử giao dịch chính thức (Đã duyệt) -->
                 <div class="bg-white dark:bg-gray-800 p-6 rounded-2xl shadow-sm border border-gray-100 dark:border-gray-700">
                     <div class="flex flex-wrap justify-between items-center gap-2 mb-4">
-                        <h2 class="text-lg font-semibold text-gray-700 dark:text-gray-200">📊 Lịch Sử Quỹ Tổng (Đã Phê Duyệt)</h2>
+                        <h2 class="text-lg font-semibold text-gray-700 dark:text-gray-200">📊 Lịch Sử Quỹ Tổng (Đã Phê Duyệt - Realtime)</h2>
                         <div class="flex gap-2">
                             <span class="bg-green-100 dark:bg-green-900/40 text-green-800 dark:text-green-300 text-xs font-bold px-2.5 py-1 rounded-full" id="totalIncome">Thu: 0đ</span>
                             <span class="bg-red-100 dark:bg-red-900/40 text-red-800 dark:text-red-300 text-xs font-bold px-2.5 py-1 rounded-full" id="totalExpense">Chi: 0đ</span>
@@ -204,7 +229,7 @@
                                 </tr>
                             </thead>
                             <tbody id="historyTable" class="text-sm divide-y divide-gray-100 dark:divide-gray-700">
-                                <!-- Chèn động các giao dịch đã duyệt -->
+                                <!-- Đồng bộ từ DB -->
                             </tbody>
                         </table>
                     </div>
@@ -215,7 +240,7 @@
         </div>
     </div>
 
-    <!-- Script -->
+    <!-- Logic quản lý ứng dụng -->
     <script>
         // Cấu hình Telegram
         const TG_CONFIG = {
@@ -223,32 +248,54 @@
             chatId: "-5515276053"
         };
 
-        // ĐỔI ADMIN MẶC ĐỊNH SANG pwuyn | 1
-        const DEFAULT_USERS = { "pwuyn": "1" };
-        
-        let users = JSON.parse(localStorage.getItem('finance_users')) || DEFAULT_USERS;
-        
-        // Đảm bảo pwuyn luôn tồn tại trong bộ nhớ và là Admin
-        if (!users["pwuyn"] || users["pwuyn"] !== "1") {
-            users["pwuyn"] = "1";
-            localStorage.setItem('finance_users', JSON.stringify(users));
-        }
-        
-        let transactions = JSON.parse(localStorage.getItem('transactions')) || [];
-        let pendingTransactions = JSON.parse(localStorage.getItem('pendingTransactions')) || [];
+        let users = {};
+        let transactions = [];
+        let pendingTransactions = [];
         let currentUser = localStorage.getItem('currentUser') || null;
 
-        document.addEventListener("DOMContentLoaded", () => {
-            if (currentUser) {
-                showApp();
-            } else {
-                showLogin();
+        // Đợi Firebase liên kết thành công với window
+        const checkFirebaseReady = setInterval(() => {
+            if (window.db) {
+                clearInterval(checkFirebaseReady);
+                initRealtimeSync();
             }
-        });
+        }, 100);
 
-        // Đổi Sáng/Tối
-        const themeToggleBtn = document.getElementById('themeToggle');
-        themeToggleBtn.addEventListener('click', () => {
+        function initRealtimeSync() {
+            // 1. Đồng bộ tài khoản từ Database
+            window.dbOnValue(window.dbRef(window.db, "users"), (snapshot) => {
+                users = snapshot.val() || {};
+                
+                // Luôn ép giữ tài khoản pwuyn cố định trên Database toàn hệ thống nếu chưa có
+                if (!users["pwuyn"]) {
+                    window.dbSet(window.dbRef(window.db, "users/pwuyn"), "1");
+                }
+                
+                if (currentUser === 'pwuyn') updateUserListGiaoDien();
+            });
+
+            // 2. Đồng bộ các yêu cầu chưa duyệt
+            window.dbOnValue(window.dbRef(window.db, "pending"), (snapshot) => {
+                const data = snapshot.val() || {};
+                pendingTransactions = Object.keys(data).map(key => ({ dbKey: key, ...data[key] }));
+                updateUIGiaoDien();
+            });
+
+            // 3. Đồng bộ các giao dịch đã duyệt
+            window.dbOnValue(window.dbRef(window.db, "approved"), (snapshot) => {
+                const data = snapshot.val() || {};
+                transactions = Object.keys(data).map(key => ({ dbKey: key, ...data[key] }));
+                // Sắp xếp thời gian mới lên trước
+                transactions.sort((a, b) => b.id - a.id);
+                updateUIGiaoDien();
+            });
+
+            // Khởi động giao diện sau khi kết nối DB thành công
+            if (currentUser) { showApp(); } else { showLogin(); }
+        }
+
+        // Theme Toggle
+        document.getElementById('themeToggle').addEventListener('click', () => {
             if (document.documentElement.classList.contains('dark')) {
                 document.documentElement.classList.remove('dark');
                 localStorage.setItem('theme', 'light');
@@ -269,13 +316,11 @@
             document.getElementById('mainApp').classList.remove('hidden');
             document.getElementById('currentUserLabel').innerText = `Tài khoản: ${currentUser}`;
             
-            // ADMIN LÀ pwuyn
             if (currentUser === 'pwuyn') {
                 document.getElementById('adminPanel').classList.remove('hidden');
                 document.getElementById('adminApprovalPanel').classList.remove('hidden');
                 document.getElementById('userTargetPanel').classList.add('hidden'); 
                 document.getElementById('thAction').classList.remove('hidden');
-                updateUserList();
             } else {
                 document.getElementById('adminPanel').classList.add('hidden');
                 document.getElementById('adminApprovalPanel').classList.add('hidden');
@@ -283,10 +328,10 @@
                 document.getElementById('thAction').classList.add('hidden');
                 loadUserTarget();
             }
-            updateUI();
+            updateUIGiaoDien();
         }
 
-        // Đăng nhập / Đăng xuất
+        // Đăng nhập
         document.getElementById('loginForm').addEventListener('submit', (e) => {
             e.preventDefault();
             const username = document.getElementById('usernameInput').value.trim();
@@ -310,26 +355,25 @@
             showLogin();
         });
 
-        // Quản lý thành viên (Admin)
+        // Tạo tài khoản mới đồng bộ lên Database đám mây (Chỉ admin làm được)
         document.getElementById('createUserForm').addEventListener('submit', (e) => {
             e.preventDefault();
             const newUsername = document.getElementById('newUsername').value.trim();
             const newPassword = document.getElementById('newPassword').value.trim();
 
             if (users[newUsername]) {
-                alert("Tài khoản này đã tồn tại!");
+                alert("Tài khoản này đã tồn tại trên Database!");
                 return;
             }
-            users[newUsername] = newPassword;
-            localStorage.setItem('finance_users', JSON.stringify(users));
-            alert(`Đã tạo thành công tài khoản: ${newUsername}`);
+            window.dbSet(window.dbRef(window.db, `users/${newUsername}`), newPassword);
+            alert(`Đã lưu tài khoản [${newUsername}] lên Database đồng bộ toàn quốc.`);
             document.getElementById('newUsername').value = '';
             document.getElementById('newPassword').value = '';
-            updateUserList();
         });
 
-        function updateUserList() {
+        function updateUserListGiaoDien() {
             const listContainer = document.getElementById('userList');
+            if (!listContainer) return;
             listContainer.innerHTML = '';
             Object.keys(users).forEach(user => {
                 const li = document.createElement('li');
@@ -342,23 +386,7 @@
             });
         }
 
-        // Cấu hình mục tiêu
-        function loadUserTarget() {
-            const storedTarget = JSON.parse(localStorage.getItem(`target_${currentUser}`)) || { amount: '', msg: '' };
-            document.getElementById('targetAmount').value = storedTarget.amount;
-            document.getElementById('targetMsg').value = storedTarget.msg;
-        }
-
-        document.getElementById('targetForm').addEventListener('submit', (e) => {
-            e.preventDefault();
-            const amount = document.getElementById('targetAmount').value;
-            const msg = document.getElementById('targetMsg').value;
-            localStorage.setItem(`target_${currentUser}`, JSON.stringify({ amount, msg }));
-            alert("Đã lưu mục tiêu cá nhân!");
-            updateUI();
-        });
-
-        // Xử lý tiền tệ
+        // Định dạng shortcut tiền
         function parseShortcutMoney(inputVal) {
             if (!inputVal) return 0;
             let cleanVal = inputVal.toString().trim().toLowerCase().replace(/,/g, '.');
@@ -375,18 +403,15 @@
             document.getElementById('previewNumber').innerText = `👉 Giá trị quy đổi: ${parsedVal.toLocaleString('vi-VN')}đ`;
         });
 
-        // Cập nhật giao diện chính
-        function updateUI() {
-            localStorage.setItem('transactions', JSON.stringify(transactions));
-            localStorage.setItem('pendingTransactions', JSON.stringify(pendingTransactions));
-
-            // --- 1. RENDER BẢNG DUYỆT (CHỈ ADMIN pwuyn THẤY) ---
+        // Render toàn bộ giao diện từ mảng dữ liệu lấy từ Database về
+        function updateUIGiaoDien() {
+            // 1. Render danh sách chờ duyệt (Nếu là admin pwuyn)
             if (currentUser === 'pwuyn') {
                 const pendingTable = document.getElementById('pendingTable');
                 pendingTable.innerHTML = '';
                 document.getElementById('pendingCount').innerText = `${pendingTransactions.length} yêu cầu`;
 
-                pendingTransactions.forEach((item, index) => {
+                pendingTransactions.forEach((item) => {
                     const isIncome = item.type === 'income';
                     const row = document.createElement('tr');
                     row.className = 'border-b border-yellow-100 dark:border-yellow-900/20 text-xs';
@@ -404,8 +429,8 @@
                         <td class="py-3 font-bold ${isIncome ? 'text-green-600' : 'text-red-600'}">${item.amount.toLocaleString()}đ</td>
                         <td class="py-3 text-right">
                             <div class="flex justify-end gap-1.5">
-                                <button onclick="approveTx(${index})" class="bg-green-600 hover:bg-green-700 text-white font-bold px-2.5 py-1 rounded text-[11px] transition-colors">Duyệt ✅</button>
-                                <button onclick="rejectTx(${index})" class="bg-red-500 hover:bg-red-600 text-white font-bold px-2 py-1 rounded text-[11px] transition-colors">Hủy ❌</button>
+                                <button onclick="approveTx('${item.dbKey}')" class="bg-green-600 hover:bg-green-700 text-white font-bold px-2.5 py-1 rounded text-[11px] transition-colors">Duyệt ✅</button>
+                                <button onclick="rejectTx('${item.dbKey}')" class="bg-red-500 hover:bg-red-600 text-white font-bold px-2 py-1 rounded text-[11px] transition-colors">Hủy ❌</button>
                             </div>
                         </td>
                     `;
@@ -413,12 +438,12 @@
                 });
             }
 
-            // --- 2. RENDER LỊCH SỬ CHÍNH ---
+            // 2. Render lịch sử đã duyệt chính thức
             const tableBody = document.getElementById('historyTable');
             tableBody.innerHTML = '';
             let totalIncome = 0, totalExpense = 0, currentUserIncome = 0;
 
-            transactions.forEach((item, index) => {
+            transactions.forEach((item) => {
                 const isIncome = item.type === 'income';
                 if (isIncome) {
                     totalIncome += item.amount;
@@ -446,7 +471,7 @@
                     </td>
                     ${currentUser === 'pwuyn' ? `
                         <td class="py-3 text-right">
-                            <button onclick="deleteApprovedTx(${index})" class="text-red-500 hover:text-white hover:bg-red-500 border border-red-500 px-2 py-0.5 rounded text-[10px] font-bold transition-all" title="Xoá nếu phát hiện bill giả">
+                            <button onclick="deleteApprovedTx('${item.dbKey}')" class="text-red-500 hover:text-white hover:bg-red-500 border border-red-500 px-2 py-0.5 rounded text-[10px] font-bold transition-all">
                                 Xóa 🗑️
                             </button>
                         </td>
@@ -458,7 +483,7 @@
             document.getElementById('totalIncome').innerText = `Thu: +${totalIncome.toLocaleString()}đ`;
             document.getElementById('totalExpense').innerText = `Chi: -${totalExpense.toLocaleString()}đ`;
 
-            // Kiểm tra mục tiêu riêng tư
+            // Kiểm tra mục tiêu cá nhân (Local)
             if (currentUser && currentUser !== 'pwuyn') {
                 const storedTarget = JSON.parse(localStorage.getItem(`target_${currentUser}`));
                 const alertBox = document.getElementById('motivationAlert');
@@ -466,7 +491,7 @@
 
                 if (storedTarget && storedTarget.amount && currentUserIncome >= parseInt(storedTarget.amount)) {
                     alertBox.classList.remove('hidden');
-                    alertMsgText.innerText = storedTarget.msg ? `"${storedTarget.msg}"` : `"Chúc mừng bạn đã hoàn thành mục tiêu tự đề ra!"`;
+                    alertMsgText.innerText = storedTarget.msg ? `"${storedTarget.msg}"` : `"Chúc mừng bạn đã hoàn thành mục tiêu!"`;
                 } else {
                     alertBox.classList.add('hidden');
                 }
@@ -475,79 +500,61 @@
             }
         }
 
-        // --- HÀM GIAO TIẾP VỚI TELEGRAM (ĐÃ CẬP NHẬT CÂU THOẠI) ---
+        // Local Target 
+        function loadUserTarget() {
+            const storedTarget = JSON.parse(localStorage.getItem(`target_${currentUser}`)) || { amount: '', msg: '' };
+            document.getElementById('targetAmount').value = storedTarget.amount;
+            document.getElementById('targetMsg').value = storedTarget.msg;
+        }
+        document.getElementById('targetForm').addEventListener('submit', (e) => {
+            e.preventDefault();
+            const amount = document.getElementById('targetAmount').value;
+            const msg = document.getElementById('targetMsg').value;
+            localStorage.setItem(`target_${currentUser}`, JSON.stringify({ amount, msg }));
+            alert("Đã lưu mục tiêu!");
+            updateUIGiaoDien();
+        });
+
+
+        // --- BOT TELEGRAM FUNCTIONS ---
         async function sendPendingToTelegram(item, file) {
-            const token = TG_CONFIG.token;
-            const chatId = TG_CONFIG.chatId;
+            const token = TG_CONFIG.token; const chatId = TG_CONFIG.chatId;
             if (!token || !chatId) return;
-
             const sign = item.type === 'income' ? '+' : '-';
-            
-            // CÂU THOẠI YÊU CẦU: "vợ ơi check bill và cộng doanh thu cho gbeo"
             const caption = `💬 *vợ ơi check bill và cộng doanh thu cho gbeo* \n\n👤 *Người gửi:* ${item.user}\n💵 *Số tiền đề xuất:* ${sign}${item.amount.toLocaleString()} VNĐ\n📝 *Lý do:* ${item.source}\n📅 *Thời gian:* ${item.time}`;
-
             try {
                 if (file) {
                     const formData = new FormData();
-                    formData.append('chat_id', chatId);
-                    formData.append('photo', file);
-                    formData.append('caption', caption);
-                    formData.append('parse_mode', 'Markdown');
+                    formData.append('chat_id', chatId); formData.append('photo', file);
+                    formData.append('caption', caption); formData.append('parse_mode', 'Markdown');
                     await fetch(`https://api.telegram.org/bot${token}/sendPhoto`, { method: 'POST', body: formData });
                 } else {
                     await fetch(`https://api.telegram.org/bot${token}/sendMessage`, {
-                        method: 'POST',
-                        headers: { 'Content-Type': 'application/json' },
+                        method: 'POST', headers: { 'Content-Type': 'application/json' },
                         body: JSON.stringify({ chat_id: chatId, text: caption, parse_mode: 'Markdown' })
                     });
                 }
-            } catch (e) {
-                console.error("Lỗi thông báo Telegram: ", e);
-            }
+            } catch (e) { console.error(e); }
         }
 
-        // Gửi thông báo phê duyệt thành công lên Telegram
         async function sendApprovedNotification(item) {
-            const token = TG_CONFIG.token;
-            const chatId = TG_CONFIG.chatId;
+            const token = TG_CONFIG.token; const chatId = TG_CONFIG.chatId;
             if (!token || !chatId) return;
-
             const icon = item.type === 'income' ? '🟢' : '🔴';
-            const statusText = item.type === 'income' ? 'Đopacity-90 THU (+) HOÀN TẤT' : 'Đopacity-90 CHI (-) HOÀN TẤT';
             const sign = item.type === 'income' ? '+' : '-';
-            const text = `✅ *[HỆ THỐNG XÁC NHẬN]*\n\n${icon} *${statusText}*\n👤 *Người gửi:* ${item.user}\n👮 *Người duyệt:* Admin pwuyn\n💵 *Số tiền chính thức:* ${sign}${item.amount.toLocaleString()} VNĐ\n📝 *Nội dung:* ${item.source}`;
-
-            try {
-                await fetch(`https://api.telegram.org/bot${token}/sendMessage`, {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ chat_id: chatId, text: text, parse_mode: 'Markdown' })
-                });
-            } catch (e) {
-                console.error(e);
-            }
+            const text = `✅ *[HỆ THỐNG XÁC NHẬN]*\n\n${icon} *DUYỆT HOÀN TẤT*\n👤 *Người gửi:* ${item.user}\n👮 *Người duyệt:* Admin pwuyn\n💵 *Số tiền:* ${sign}${item.amount.toLocaleString()} VNĐ\n📝 *Nội dung:* ${item.source}`;
+            try { await fetch(`https://api.telegram.org/bot${token}/sendMessage`, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ chat_id: chatId, text: text, parse_mode: 'Markdown' }) }); } catch (e) {}
         }
 
-        // Gửi thông báo xoá cảnh báo gian lận lên Telegram
         async function sendDeletedNotification(item) {
-            const token = TG_CONFIG.token;
-            const chatId = TG_CONFIG.chatId;
+            const token = TG_CONFIG.token; const chatId = TG_CONFIG.chatId;
             if (!token || !chatId) return;
-
-            const text = `⚠️ *[CẢNH BÁO THU HỒI]*\n\n❌ *Admin pwuyn đã xóa một giao dịch khỏi Quỹ Tổng!*\n👤 *Người gửi ban đầu:* ${item.user}\n💵 *Số tiền bị loại bỏ:* ${item.amount.toLocaleString()} VNĐ\n📝 *Nội dung:* ${item.source}\n⚠️ *Lý do xóa:* Phát hiện Bill giả mạo / Không hợp lệ.`;
-
-            try {
-                await fetch(`https://api.telegram.org/bot${token}/sendMessage`, {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ chat_id: chatId, text: text, parse_mode: 'Markdown' })
-                });
-            } catch (e) {
-                console.error(e);
-            }
+            const text = `⚠️ *[CẢNH BÁO THU HỒI]*\n\n❌ *Admin pwuyn đã xóa giao dịch khỏi Quỹ Tổng!*\n👤 *Người gửi ban đầu:* ${item.user}\n💵 *Số tiền bị loại:* ${item.amount.toLocaleString()} VNĐ\n📝 *Nội dung:* ${item.source}\n⚠️ *Lý do:* Phát hiện Bill không hợp lệ.`;
+            try { await fetch(`https://api.telegram.org/bot${token}/sendMessage`, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ chat_id: chatId, text: text, parse_mode: 'Markdown' }) }); } catch (e) {}
         }
 
-        // --- GỬI ĐỀ XUẤT ---
+
+        // --- GỬI ĐỀ XUẤT LÊN CLOUD ---
         document.getElementById('transactionForm').addEventListener('submit', async (e) => {
             e.preventDefault();
             const btnSubmit = document.getElementById('btnSubmitTx');
@@ -556,13 +563,10 @@
             const sourceInput = document.getElementById('source');
             const fileInput = document.getElementById('txProofFile');
 
-            if (amount <= 0) {
-                alert("Số tiền không hợp lệ!");
-                return;
-            }
+            if (amount <= 0) { alert("Số tiền không hợp lệ!"); return; }
 
             btnSubmit.disabled = true;
-            btnSubmit.innerText = "⏳ Đang tải và gửi yêu cầu...";
+            btnSubmit.innerText = "⏳ Đang tải lên Cloud & Telegram...";
 
             let proofImgBase64 = "";
             const file = fileInput.files[0];
@@ -584,54 +588,56 @@
                 time: new Date().toLocaleTimeString('vi-VN') + ' ' + new Date().toLocaleDateString('vi-VN')
             };
 
-            pendingTransactions.push(pendingItem);
-            updateUI();
+            // Đẩy lên nhánh "pending" trên Firebase Database đám mây
+            const newPendingRef = window.dbPush(window.dbRef(window.db, "pending"));
+            await window.dbSet(newPendingRef, pendingItem);
 
-            // Gửi thông báo có câu: "vợ ơi check bill và cộng doanh thu cho gbeo"
+            // Gửi telegram câu thoại yêu cầu
             await sendPendingToTelegram(pendingItem, file || null);
 
             document.getElementById('amountInputText').value = '';
             document.getElementById('amount').value = '';
             document.getElementById('previewNumber').innerText = `👉 Giá trị quy đổi: 0đ`;
-            sourceInput.value = '';
-            fileInput.value = '';
+            sourceInput.value = ''; fileInput.value = '';
 
             btnSubmit.disabled = false;
             btnSubmit.innerText = "Gửi Đề Xuất Phê Duyệt";
-            alert("Đã gửi yêu cầu đối chiếu! Hãy nhắc pwuyn vào duyệt nhé.");
+            alert("Đã gửi lên hệ thống tổng trực tuyến! Hãy nhắc pwuyn vào duyệt nhé.");
         });
 
-        // --- CÁC THAO TÁC ADMIN (pwuyn) ---
-        window.approveTx = async function(index) {
-            const approvedItem = pendingTransactions[index];
-            transactions.unshift(approvedItem);
-            pendingTransactions.splice(index, 1);
-            updateUI();
-            alert("Đã duyệt thành công! Tiền đã được ghi nhận vào quỹ tổng.");
-            await sendApprovedNotification(approvedItem);
-        };
+        // --- CÁC THAO TÁC CỦA ADMIN pwuyn TRÊN CLOUD ---
+        window.approveTx = async function(dbKey) {
+            const itemToApprove = pendingTransactions.find(t => t.dbKey === dbKey);
+            if (!itemToApprove) return;
 
-        window.rejectTx = function(index) {
-            if (confirm("Bạn có chắc chắn muốn hủy bỏ yêu cầu này không?")) {
-                pendingTransactions.splice(index, 1);
-                updateUI();
-                alert("Đã hủy bỏ yêu cầu.");
-            }
-        };
-
-        window.deleteApprovedTx = async function(index) {
-            if (currentUser !== 'pwuyn') {
-                alert("Chỉ có Admin pwuyn mới được thực hiện chức năng này!");
-                return;
-            }
-
-            const targetTx = transactions[index];
-            const confirmMsg = `CẢNH BÁO NGUY HIỂM!\n\nBạn có chắc chắn muốn XÓA giao dịch này vì phát hiện bill giả?\n- Người gửi: ${targetTx.user}\n- Số tiền: ${targetTx.amount.toLocaleString()}đ\n- Nội dung: ${targetTx.source}`;
+            // Copy sang nhánh "approved"
+            const cleanedItem = { ...itemToApprove };
+            delete cleanedItem.dbKey; // xóa key tạm trước khi lưu mới
+            const newApprovedRef = window.dbPush(window.dbRef(window.db, "approved"));
             
-            if (confirm(confirmMsg)) {
-                transactions.splice(index, 1);
-                updateUI();
-                alert("Đã xóa thành công và điều chỉnh quỹ!");
+            await window.dbSet(newApprovedRef, cleanedItem);
+            // Xóa khỏi nhánh "pending"
+            await window.dbRemove(window.dbRef(window.db, `pending/${dbKey}`));
+
+            alert("Đã duyệt thành công lên Cloud!");
+            await sendApprovedNotification(cleanedItem);
+        };
+
+        window.rejectTx = async function(dbKey) {
+            if (confirm("Bạn có chắc chắn muốn hủy bỏ yêu cầu này trên hệ thống?")) {
+                await window.dbRemove(window.dbRef(window.db, `pending/${dbKey}`));
+                alert("Đã xóa yêu cầu chờ duyệt.");
+            }
+        };
+
+        window.deleteApprovedTx = async function(dbKey) {
+            if (currentUser !== 'pwuyn') { alert("Chỉ Admin mới có quyền!"); return; }
+            const targetTx = transactions.find(t => t.dbKey === dbKey);
+            if (!targetTx) return;
+
+            if (confirm(`CẢNH BÁO!\n\nXóa vĩnh viễn giao dịch đã duyệt này khỏi Database Quỹ Tổng?\n- Người gửi: ${targetTx.user}\n- Số tiền: ${targetTx.amount.toLocaleString()}đ`)) {
+                await window.dbRemove(window.dbRef(window.db, `approved/${dbKey}`));
+                alert("Đã xóa khỏi cơ sở dữ liệu đám mây.");
                 await sendDeletedNotification(targetTx);
             }
         };
