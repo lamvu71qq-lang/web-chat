@@ -3,762 +3,632 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Quản Lý Thu Nhập Ròng - Xác Minh Bill & Báo Telegram</title>
-    <!-- Thư viện vẽ biểu đồ Chart.js -->
-    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-    <!-- Thư viện AI OCR Tesseract.js để tự động nhận diện chữ trong ảnh bill -->
+    <title>Quản Lý Tài Chỉ & Duyệt Bill Thông Minh</title>
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Tesseract.js cho OCR -->
     <script src="https://cdn.jsdelivr.net/npm/tesseract.js@5/dist/tesseract.min.js"></script>
-    <style>
-        :root {
-            --primary-color: #2ecc71;
-            --danger-color: #e74c3c;
-            --blue-color: #3498db;
-            --warning-color: #f39c12;
-            
-            /* Light Theme */
-            --bg-body: #eef2f7;
-            --bg-card: #ffffff;
-            --bg-input: #ffffff;
-            --bg-light: #f8f9fa;
-            --text-main: #2c3e50;
-            --text-muted: #7f8c8d;
-            --border-color: #dddddd;
-            --table-header: #f1f2f6;
-        }
-
-        [data-theme="dark"] {
-            --bg-body: #1a1a24;
-            --bg-card: #242533;
-            --bg-input: #2d3047;
-            --bg-light: #1d1e2c;
-            --text-main: #e2e8f0;
-            --text-muted: #a0aec0;
-            --border-color: #3f445e;
-            --table-header: #2d3047;
-        }
-
-        body {
-            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-            background-color: var(--bg-body);
-            margin: 0;
-            padding: 20px;
-            color: var(--text-main);
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            min-height: 95vh;
-            transition: background-color 0.3s, color 0.3s;
-        }
-
-        /* Login */
-        .login-box {
-            background: var(--bg-card);
-            padding: 40px 30px;
-            border-radius: 12px;
-            box-shadow: 0 4px 25px rgba(0,0,0,0.15);
-            width: 100%;
-            max-width: 380px;
-            text-align: center;
-        }
-
-        .login-box h2 { margin-bottom: 25px; color: var(--text-main); }
-        .login-group { margin-bottom: 20px; text-align: left; }
-        .login-group label { display: block; margin-bottom: 6px; font-size: 14px; font-weight: 600; }
-        .login-group input {
-            width: 100%; padding: 12px; box-sizing: border-box; border: 1px solid var(--border-color);
-            background-color: var(--bg-input); color: var(--text-main); border-radius: 6px; font-size: 15px;
-        }
-        .btn-login {
-            width: 100%; padding: 12px; background-color: var(--blue-color); color: white;
-            border: none; border-radius: 6px; font-size: 16px; font-weight: bold; cursor: pointer;
-        }
-
-        /* App */
-        .container {
-            max-width: 1000px;
-            width: 100%;
-            background: var(--bg-card);
-            padding: 30px;
-            border-radius: 12px;
-            box-shadow: 0 4px 15px rgba(0,0,0,0.1);
-            display: none;
-            margin-top: 20px;
-            margin-bottom: 20px;
-        }
-
-        .header-app {
-            display: flex; justify-content: space-between; align-items: center;
-            margin-bottom: 25px; border-bottom: 2px solid var(--border-color); padding-bottom: 15px;
-        }
-        .header-app h1 { margin: 0; font-size: 24px; }
-        .header-controls { display: flex; gap: 10px; align-items: center; }
-
-        .btn-theme-toggle {
-            background: var(--bg-light); border: 1px solid var(--border-color); color: var(--text-main);
-            padding: 8px 12px; border-radius: 6px; cursor: pointer; font-weight: bold;
-        }
-        .btn-logout {
-            background: transparent; border: 1px solid var(--text-muted); color: var(--text-muted);
-            padding: 8px 15px; border-radius: 6px; cursor: pointer; font-weight: 600;
-        }
-
-        /* Dashboard Cards */
-        .dashboard {
-            display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 15px; margin-bottom: 25px;
-        }
-        .card {
-            background: var(--bg-light); padding: 20px; border-radius: 8px; text-align: center; border-left: 5px solid #ccc;
-        }
-        .card.income { border-left-color: var(--primary-color); }
-        .card.expense { border-left-color: var(--danger-color); }
-        .card.net { border-left-color: var(--blue-color); }
-        .card h3 { margin: 0 0 10px 0; font-size: 13px; text-transform: uppercase; color: var(--text-muted); }
-        .card p { margin: 0; font-size: 22px; font-weight: bold; }
-
-        /* Chart */
-        .chart-section {
-            background: var(--bg-light); padding: 20px; border-radius: 8px; margin-bottom: 25px; border: 1px solid var(--border-color);
-        }
-        .chart-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px; }
-        .chart-header h3 { margin: 0; font-size: 18px; }
-        .chart-filter select {
-            padding: 6px 12px; border: 1px solid var(--border-color); border-radius: 6px;
-            background-color: var(--bg-card); color: var(--text-main);
-        }
-        .chart-container { position: relative; height: 280px; width: 100%; }
-
-        /* Form Input */
-        .form-section {
-            background: var(--bg-light); padding: 20px; border-radius: 8px; margin-bottom: 25px; border: 1px solid var(--border-color);
-        }
-        .form-row {
-            display: grid;
-            grid-template-columns: 1.5fr 1fr 1fr 1fr 1fr auto;
-            gap: 10px;
-            margin-bottom: 10px;
-            align-items: center;
-        }
-        input, select, button {
-            padding: 10px 12px; border: 1px solid var(--border-color);
-            background-color: var(--bg-input); color: var(--text-main); border-radius: 6px; font-size: 14px; outline: none;
-        }
-        .file-input-container {
-            display: flex;
-            flex-direction: column;
-        }
-        .file-input-container input[type="file"] {
-            border: none; padding: 5px 0; font-size: 12px; background: transparent;
-        }
-
-        button.btn-add {
-            background-color: var(--blue-color); color: white; border: none; cursor: pointer; font-weight: bold; transition: background 0.2s;
-        }
-        button.btn-add:hover { background-color: #2980b9; }
-        .input-hint { font-size: 11px; color: var(--text-muted); margin-top: 5px; display: block; }
-
-        /* Status Badges */
-        .badge {
-            padding: 4px 8px; border-radius: 4px; font-size: 11px; font-weight: bold; display: inline-block;
-        }
-        .badge.approved { background-color: rgba(46, 204, 113, 0.2); color: #2ecc71; }
-        .badge.pending { background-color: rgba(243, 156, 18, 0.2); color: #e67e22; }
-
-        /* OCR Loading status */
-        #ocr-status {
-            font-size: 13px; color: var(--blue-color); font-weight: bold; margin-bottom: 15px; display: none; text-align: center;
-        }
-
-        /* List & Table */
-        .list-section h2 { font-size: 18px; margin-bottom: 15px; padding-bottom: 8px; border-bottom: 1px solid var(--border-color); }
-        table { width: 100%; border-collapse: collapse; text-align: left; }
-        th, td { padding: 10px 12px; border-bottom: 1px solid var(--border-color); font-size: 14px; }
-        th { background-color: var(--table-header); color: var(--text-main); }
-        .txt-income { color: var(--primary-color); font-weight: bold; }
-        .txt-expense { color: var(--danger-color); font-weight: bold; }
-
-        .btn-view-bill {
-            background: none; border: 1px solid var(--blue-color); color: var(--blue-color);
-            padding: 4px 8px; border-radius: 4px; font-size: 11px; cursor: pointer; margin-right: 5px;
-        }
-        .btn-view-bill:hover { background: var(--blue-color); color: white; }
-        .btn-delete {
-            background-color: transparent; color: var(--danger-color); border: 1px solid var(--danger-color);
-            padding: 4px 8px; cursor: pointer; border-radius: 4px; font-size: 11px;
-        }
-        .btn-delete:hover { background-color: var(--danger-color); color: white; }
-
-        /* Modal hiển thị ảnh Bill */
-        .modal {
-            display: none; position: fixed; z-index: 1000; left: 0; top: 0; width: 100%; height: 100%;
-            background-color: rgba(0,0,0,0.7); justify-content: center; align-items: center;
-        }
-        .modal-content {
-            background-color: var(--bg-card); padding: 20px; border-radius: 12px; max-width: 90%; max-height: 90%; text-align: center;
-        }
-        .modal-content img { max-width: 100%; max-height: 500px; border-radius: 6px; }
-        .close-modal { margin-top: 15px; padding: 8px 20px; background-color: var(--danger-color); color: white; border: none; border-radius: 6px; cursor: pointer; }
-
-        @media (max-width: 768px) {
-            .form-row { grid-template-columns: 1fr; }
-        }
-    </style>
 </head>
-<body>
+<body class="bg-gray-50 min-h-screen text-gray-800 font-sans">
 
-<!-- KHUNG ĐĂNG NHẬP -->
-<div class="login-box" id="login-box">
-    <h2>🔐 Đăng Nhập</h2>
-    <div class="login-group">
-        <label for="username">Tài khoản</label>
-        <input type="text" id="username" placeholder="Nhập tài khoản" value="gbao08">
-    </div>
-    <div class="login-group">
-        <label for="password">Mật khẩu</label>
-        <input type="password" id="password" placeholder="Nhập mật khẩu" value="1">
-    </div>
-    <button class="btn-login" onclick="handleLogin()">Đăng nhập</button>
-    <div class="error-msg" id="error-msg" style="color: var(--danger-color); font-size: 13px; margin-top: 10px; display: none;">Tài khoản hoặc mật khẩu không đúng!</div>
-</div>
-
-<!-- KHUNG ỨNG DỤNG CHÍNH -->
-<div class="container" id="main-app">
-    <div class="header-app">
-        <h1>📊 Quản Lý Thu Nhập Ròng</h1>
-        <div class="header-controls">
-            <button class="btn-theme-toggle" id="theme-btn" onclick="toggleTheme()">☀️ Light</button>
-            <button class="btn-logout" onclick="handleLogout()">Đăng xuất</button>
-        </div>
-    </div>
-
-    <!-- Bảng điều khiển -->
-    <div class="dashboard">
-        <div class="card income">
-            <h3>Tổng Thu Nhập (Đã duyệt)</h3>
-            <p id="total-income">0đ</p>
-        </div>
-        <div class="card expense">
-            <h3>Tổng Chi / Thuế (Đã duyệt)</h3>
-            <p id="total-expense">0đ</p>
-        </div>
-        <div class="card net">
-            <h3>Thu Nhập Ròng</h3>
-            <p id="net-income">0đ</p>
-        </div>
-    </div>
-
-    <!-- BIỂU ĐỒ -->
-    <div class="chart-section">
-        <div class="chart-header">
-            <h3>📈 Biểu đồ phân tích dòng tiền</h3>
-            <div class="chart-filter">
-                <select id="chart-filter-type" onchange="renderChart()">
-                    <option value="day">Theo Ngày</option>
-                    <option value="month">Theo Tháng</option>
-                    <option value="year">Theo Năm</option>
-                </select>
+    <!-- GIAO DIỆN ĐĂNG NHẬP (Hiển thị đầu tiên nếu chưa đăng nhập) -->
+    <div id="loginScreen" class="min-h-screen flex items-center justify-center p-4">
+        <div class="bg-white p-8 rounded-2xl shadow-md border border-gray-100 max-w-md w-full">
+            <div class="text-center mb-6">
+                <h1 class="text-2xl font-bold text-blue-600">Smart Finance Tracker</h1>
+                <p class="text-sm text-gray-400 mt-1">Vui lòng đăng nhập để tiếp tục quản lý</p>
             </div>
-        </div>
-        <div class="chart-container">
-            <canvas id="financeChart"></canvas>
+            <form id="loginForm" class="space-y-4">
+                <div>
+                    <label class="block text-xs font-bold text-gray-500 uppercase">Tên tài khoản</label>
+                    <input type="text" id="usernameInput" required class="mt-1 w-full p-2.5 border rounded-lg focus:ring-2 focus:ring-blue-500 outline-none">
+                </div>
+                <div>
+                    <label class="block text-xs font-bold text-gray-500 uppercase">Mật khẩu</label>
+                    <input type="password" id="passwordInput" required class="mt-1 w-full p-2.5 border rounded-lg focus:ring-2 focus:ring-blue-500 outline-none">
+                </div>
+                <div id="loginError" class="text-red-500 text-xs hidden">Tài khoản hoặc mật khẩu không đúng!</div>
+                <button type="submit" class="w-full bg-blue-600 hover:bg-blue-700 text-white font-medium py-2.5 rounded-lg transition-colors">
+                    Đăng Nhập
+                </button>
+            </form>
         </div>
     </div>
 
-    <!-- KHU VỰC THÔNG BÁO QUÉT OCR -->
-    <div id="ocr-status">⏳ Trình duyệt đang sử dụng AI quét chữ trên Bill... Vui lòng đợi trong giây lát!</div>
-
-    <!-- Form Nhập Liệu kèm Tải Ảnh Hóa Đơn -->
-    <div class="form-section">
-        <div class="form-row">
-            <input type="text" id="desc" placeholder="Nội dung khoản thu/chi" required>
-            
+    <!-- GIAO DIỆN CHÍNH (Ẩn khi chưa đăng nhập) -->
+    <div id="mainApp" class="max-w-5xl mx-auto p-4 md:p-8 hidden">
+        <!-- Header -->
+        <header class="flex flex-wrap justify-between items-center mb-6 gap-4">
             <div>
-                <input type="text" id="amount" placeholder="Số tiền (VND)" style="width: 100%; box-sizing: border-box;" required>
-                <small class="input-hint">Mẹo: Nhập "10k", "1.5m"...</small>
+                <h1 class="text-3xl font-extrabold text-blue-600">Smart Finance Tracker</h1>
+                <p class="text-sm text-gray-500 mt-1">Hệ thống quản lý tài chính thông minh</p>
+            </div>
+            <div class="flex items-center gap-3">
+                <span class="text-sm font-semibold bg-blue-50 text-blue-700 px-3 py-1.5 rounded-full" id="currentUserLabel">User: ...</span>
+                <button id="btnLogout" class="text-sm text-red-500 hover:text-red-700 font-medium">Đăng xuất</button>
+            </div>
+        </header>
+
+        <!-- THÔNG ĐIỆP ĐỘNG LỰC RIÊNG TƯ (Chỉ hiện khi đạt mục tiêu & không phải admin) -->
+        <div id="motivationAlert" class="mb-6 p-5 bg-gradient-to-r from-yellow-500 to-amber-600 text-white rounded-2xl shadow-md hidden relative overflow-hidden">
+            <div class="relative z-10">
+                <h3 class="text-lg font-bold flex items-center gap-2">🎉 Chúc Mừng Bạn Đã Đạt Mục Tiêu Thu Nhập!</h3>
+                <p id="motivationMessage" class="mt-2 text-sm font-medium italic opacity-95">"Câu thông điệp của bạn"</p>
+            </div>
+            <div class="absolute right-4 bottom-[-20px] text-8xl opacity-10 pointer-events-none">🏆</div>
+        </div>
+
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+            
+            <!-- CỘT TRÁI: Nhập giao dịch & Cấu hình -->
+            <div class="md:col-span-1 space-y-6">
+                
+                <!-- Quản lý Thành Viên (Chỉ Admin "gbao08" nhìn thấy) -->
+                <div id="adminPanel" class="bg-white p-6 rounded-2xl shadow-sm border border-gray-100 hidden">
+                    <h2 class="text-lg font-semibold text-gray-700 mb-4 flex items-center gap-2">
+                        <span>👥</span> Quản Lý Thành Viên (Admin)
+                    </h2>
+                    <form id="createUserForm" class="space-y-3">
+                        <div>
+                            <label class="block text-[11px] font-bold text-gray-500 uppercase">Tên tài khoản mới</label>
+                            <input type="text" id="newUsername" required placeholder="Ví dụ: nhanvien01" class="mt-1 w-full p-2 border rounded-lg text-sm focus:ring-2 focus:ring-blue-500 outline-none">
+                        </div>
+                        <div>
+                            <label class="block text-[11px] font-bold text-gray-500 uppercase">Mật khẩu mới</label>
+                            <input type="password" id="newPassword" required placeholder="Mật khẩu" class="mt-1 w-full p-2 border rounded-lg text-sm focus:ring-2 focus:ring-blue-500 outline-none">
+                        </div>
+                        <button type="submit" class="w-full bg-gray-800 hover:bg-gray-950 text-white font-medium py-1.5 rounded-lg text-xs transition-colors">
+                            Tạo Tài Khoản
+                        </button>
+                    </form>
+                    
+                    <!-- Danh sách tài khoản đã tạo -->
+                    <div class="mt-4 pt-4 border-t border-gray-100">
+                        <p class="text-xs font-bold text-gray-400 uppercase mb-2">Danh sách tài khoản:</p>
+                        <ul id="userList" class="text-xs text-gray-600 space-y-1 divide-y divide-gray-50">
+                            <!-- JS tự render -->
+                        </ul>
+                    </div>
+                </div>
+
+                <!-- Thiết Lập Mục Tiêu Thu Nhập & Thông Điệp Riêng Tư (Chỉ User thấy, Admin KHÔNG thấy) -->
+                <div id="userTargetPanel" class="bg-white p-6 rounded-2xl shadow-sm border border-gray-100 hidden">
+                    <h2 class="text-base font-bold text-gray-700 mb-3 flex items-center gap-2">
+                        <span>🎯</span> Mục Tiêu Cá Nhân (Bảo Mật)
+                    </h2>
+                    <p class="text-[11px] text-gray-400 mb-3">Cấu hình này được lưu trực tiếp tại máy của bạn, Admin sẽ không thể nhìn thấy!</p>
+                    <form id="targetForm" class="space-y-3">
+                        <div>
+                            <label class="block text-[10px] font-bold text-gray-500 uppercase">Thu nhập muốn đạt (VNĐ)</label>
+                            <input type="number" id="targetAmount" placeholder="Ví dụ: 20000000" class="mt-1 w-full p-2 border rounded-lg text-sm focus:ring-2 focus:ring-amber-500 outline-none">
+                        </div>
+                        <div>
+                            <label class="block text-[10px] font-bold text-gray-500 uppercase">Thông điệp khi đạt mục tiêu</label>
+                            <textarea id="targetMsg" placeholder="Tự thưởng bản thân một chầu lẩu thôi nào!" rows="2" class="mt-1 w-full p-2 border rounded-lg text-sm focus:ring-2 focus:ring-amber-500 outline-none resize-none"></textarea>
+                        </div>
+                        <button type="submit" class="w-full bg-amber-500 hover:bg-amber-600 text-white font-medium py-1.5 rounded-lg text-xs transition-colors">
+                            Lưu cấu hình bảo mật
+                        </button>
+                    </form>
+                </div>
+
+                <!-- Form nhập giao dịch -->
+                <div class="bg-white p-6 rounded-2xl shadow-sm border border-gray-100">
+                    <h2 class="text-lg font-semibold text-gray-700 mb-4">✍️ Thêm Giao Dịch</h2>
+                    <form id="transactionForm" class="space-y-4">
+                        <div>
+                            <label class="block text-xs font-bold text-gray-500 uppercase">Loại giao dịch</label>
+                            <select id="txType" class="mt-1 w-full p-2 border rounded-lg focus:ring-2 focus:ring-blue-500 outline-none">
+                                <option value="income" class="text-green-600 font-medium">＋ Thu nhập (Cộng vào)</option>
+                                <option value="expense" class="text-red-600 font-medium">－ Chi tiêu (Trừ ra)</option>
+                            </select>
+                        </div>
+                        <div>
+                            <label class="block text-xs font-bold text-gray-500 uppercase">Số tiền (Gõ: 10k, 1.5m, 2tr...)</label>
+                            <input type="text" id="amountInputText" placeholder="Ví dụ: 50k, 1.2tr, 500000" required class="mt-1 w-full p-2 border rounded-lg focus:ring-2 focus:ring-blue-500 outline-none font-semibold">
+                            <input type="hidden" id="amount">
+                            <span id="previewNumber" class="text-xs text-gray-400 mt-1 block">👉 Giá trị thực tế: 0đ</span>
+                        </div>
+                        <div>
+                            <label class="block text-xs font-bold text-gray-500 uppercase">Nguồn / Nội dung</label>
+                            <input type="text" id="source" required placeholder="Nội dung giao dịch..." class="mt-1 w-full p-2 border rounded-lg focus:ring-2 focus:ring-blue-500 outline-none">
+                        </div>
+                        <button type="submit" class="w-full bg-blue-600 hover:bg-blue-700 text-white font-medium py-2 rounded-lg transition-colors">
+                            Lưu & Báo Telegram
+                        </button>
+                    </form>
+                </div>
+
+                <!-- Cấu hình Telegram (Dành cho Admin) -->
+                <div class="bg-white p-6 rounded-2xl shadow-sm border border-gray-100">
+                    <h2 class="text-sm font-semibold text-gray-600 mb-3 flex items-center gap-2">
+                        <span>⚙️</span> Cấu hình Telegram (Bảo mật)
+                    </h2>
+                    <div class="space-y-2 text-xs">
+                        <div>
+                            <label class="block text-[10px] text-gray-400 uppercase">Telegram Bot Token</label>
+                            <input type="password" id="tgToken" value="8910656676:AAHo4mkt-ul-bYutXL1sloponqB-C7k4ldU" class="mt-1 w-full p-1.5 border rounded-lg text-sm bg-gray-50 text-gray-600 focus:ring-2 focus:ring-blue-500 outline-none">
+                        </div>
+                        <div>
+                            <label class="block text-[10px] text-gray-400 uppercase">Your Chat ID</label>
+                            <input type="text" id="tgChatId" value="-5515276053" class="mt-1 w-full p-1.5 border rounded-lg text-sm bg-gray-50 text-gray-600 focus:ring-2 focus:ring-blue-500 outline-none">
+                        </div>
+                    </div>
+                </div>
             </div>
 
-            <input type="date" id="date" required>
+            <!-- CỘT PHẢI: Quét hóa đơn & Lịch sử -->
+            <div class="md:col-span-2 space-y-6">
+                <!-- Quét Bill AI phân loại tự động -->
+                <div class="bg-white p-6 rounded-2xl shadow-sm border border-gray-100">
+                    <h2 class="text-lg font-semibold text-gray-700 mb-2 flex items-center gap-2">
+                        <span>📷</span> Quét Bill Nhận/Chuyển Tiền
+                    </h2>
+                    <p class="text-sm text-gray-400 mb-4">Mẹo: Nếu AI gặp lỗi không nhận dạng được số tiền, bill ảnh sẽ lập tức được gửi thẳng về nhóm Telegram của bạn để kiểm duyệt thủ công!</p>
+                    
+                    <div class="border-2 border-dashed border-gray-200 rounded-xl p-6 text-center hover:border-blue-500 transition-colors cursor-pointer relative">
+                        <input type="file" id="billInput" accept="image/*" class="absolute inset-0 opacity-0 cursor-pointer">
+                        <div class="space-y-2">
+                            <span class="text-3xl block">📤</span>
+                            <span class="text-sm font-medium text-blue-600 block">Chọn ảnh bill ngân hàng của bạn</span>
+                            <span class="text-xs text-gray-400 block">Hỗ trợ ảnh chụp màn hình điện thoại</span>
+                        </div>
+                    </div>
 
-            <select id="type">
-                <option value="income">Thu Nhập</option>
-                <option value="expense">Chi Phí / Thuế</option>
-            </select>
+                    <!-- Trạng thái quét -->
+                    <div id="ocrStatus" class="mt-4 hidden text-sm font-medium text-blue-600 flex items-center gap-2">
+                        <span class="animate-spin">🔄</span> Hệ thống đang đọc chữ và phân tách dòng tiền...
+                    </div>
 
-            <!-- Tải ảnh hóa đơn / bill -->
-            <div class="file-input-container">
-                <label style="font-size: 11px; font-weight: bold; margin-bottom: 2px;">Tải lên Bill xác minh:</label>
-                <input type="file" id="bill-file" accept="image/*" required>
+                    <!-- Kết quả nhận diện tạm thời -->
+                    <div id="ocrResultContainer" class="mt-4 p-4 rounded-xl hidden">
+                        <p class="text-xs font-bold mb-1 uppercase" id="ocrTitle">KẾT QUẢ PHÂN TÍCH BILL:</p>
+                        <p class="text-sm text-gray-700 mb-3" id="ocrRawText"></p>
+                        <div class="flex gap-2">
+                            <button id="btnApplyOcr" class="text-white text-xs px-3 py-1.5 rounded-lg transition-colors font-medium">
+                                Đồng ý ghi nhận
+                            </button>
+                            <button id="btnCancelOcr" class="text-gray-500 hover:text-gray-700 text-xs px-3 py-1.5">
+                                Hủy bỏ
+                            </button>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Danh sách giao dịch -->
+                <div class="bg-white p-6 rounded-2xl shadow-sm border border-gray-100">
+                    <div class="flex flex-wrap justify-between items-center gap-2 mb-4">
+                        <h2 class="text-lg font-semibold text-gray-700">📊 Lịch Sử Giao Dịch</h2>
+                        <div class="flex gap-2">
+                            <span class="bg-green-100 text-green-800 text-xs font-bold px-2.5 py-1 rounded-full" id="totalIncome">Thu: 0đ</span>
+                            <span class="bg-red-100 text-red-800 text-xs font-bold px-2.5 py-1 rounded-full" id="totalExpense">Chi: 0đ</span>
+                        </div>
+                    </div>
+                    <div class="overflow-x-auto">
+                        <table class="w-full text-left border-collapse">
+                            <thead>
+                                <tr class="border-b text-xs text-gray-400 uppercase">
+                                    <th class="py-2">Thời gian</th>
+                                    <th class="py-2">Người tạo</th>
+                                    <th class="py-2">Phân loại</th>
+                                    <th class="py-2">Nội dung</th>
+                                    <th class="py-2 text-right">Số tiền</th>
+                                </tr>
+                            </thead>
+                            <tbody id="historyTable" class="text-sm divide-y divide-gray-100">
+                                <!-- Chèn động bằng Javascript -->
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+
             </div>
 
-            <button class="btn-add" onclick="addTransaction()">Thêm</button>
         </div>
     </div>
 
-    <!-- Danh Sách Lịch Sử -->
-    <div class="list-section">
-        <h2>Lịch sử chi tiết (Giao dịch hợp lệ mới được cộng tiền)</h2>
-        <table>
-            <thead>
-                <tr>
-                    <th>Ngày</th>
-                    <th>Nội dung</th>
-                    <th>Phân loại</th>
-                    <th>Số tiền</th>
-                    <th>Trạng thái</th>
-                    <th>Hành động</th>
-                </tr>
-            </thead>
-            <tbody id="transaction-list"></tbody>
-        </table>
-    </div>
-</div>
-
-<!-- MODAL XEM ẢNH BILL -->
-<div class="modal" id="bill-modal">
-    <div class="modal-content">
-        <h3 id="modal-title">Ảnh hóa đơn kiểm đối</h3>
-        <img id="modal-img" src="" alt="Hóa đơn giao dịch">
-        <br>
-        <button class="close-modal" onclick="closeModal()">Đóng lại</button>
-    </div>
-</div>
-
-<script>
-    // Cấu hình Telegram
-    const TELEGRAM_TOKEN = "8910656676:AAHo4mkt-ul-bYutXL1sloponqB-C7k4ldU";
-    const TELEGRAM_CHAT_ID = "8910656676";
-
-    // Hàm thực hiện gửi thông báo về Telegram
-    function sendTelegramNotification(transaction, verifySuccess) {
-        const typeLabel = transaction.type === 'income' ? '🟢 THU NHẬP' : '🔴 CHI PHÍ';
-        const statusLabel = verifySuccess ? '✅ ĐÃ DUYỆT (AI kiểm đối khớp)' : '⚠️ CHỜ DUYỆT (Hóa đơn không khớp)';
-        const formattedAmount = formatCurrency(transaction.amount);
-        const formattedDate = new Date(transaction.date).toLocaleDateString('vi-VN');
-
-        const message = 
-`🔔 <b>GIAO DỊCH MỚI TRÊN WEB</b>
-----------------------------------
-📌 <b>Phân loại:</b> ${typeLabel}
-📝 <b>Nội dung:</b> ${transaction.desc}
-💰 <b>Số tiền:</b> ${formattedAmount}
-📅 <b>Ngày giao dịch:</b> ${formattedDate}
-----------------------------------
-⚙️ <b>Trạng thái hệ thống:</b> ${statusLabel}
-`;
-
-        sendRawTelegram(message);
-    }
-
-    // Hàm gửi tin nhắn thuần về Telegram
-    function sendRawTelegram(textMessage) {
-        const url = `https://api.telegram.org/bot${TELEGRAM_TOKEN}/sendMessage`;
-        fetch(url, {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({
-                chat_id: TELEGRAM_CHAT_ID,
-                text: textMessage,
-                parse_mode: 'HTML'
-            })
-        })
-        .then(response => {
-            if (!response.ok) console.error('Lỗi khi gửi thông báo Telegram.');
-        })
-        .catch(error => console.error('Lỗi API Telegram:', error));
-    }
-
-    // Quản lý Giao diện Dark/Light
-    function applyTheme(theme) {
-        if (theme === 'dark') {
-            document.documentElement.setAttribute('data-theme', 'dark');
-            document.getElementById('theme-btn').innerText = '🌙 Dark';
-        } else {
-            document.documentElement.removeAttribute('data-theme');
-            document.getElementById('theme-btn').innerText = '☀️ Light';
-        }
-        localStorage.setItem('theme', theme);
-        if (financeChartInstance) renderChart();
-    }
-
-    function toggleTheme() {
-        const currentTheme = localStorage.getItem('theme') || 'light';
-        const newTheme = currentTheme === 'light' ? 'dark' : 'light';
-        applyTheme(newTheme);
-    }
-
-    // Kiểm tra đăng nhập
-    window.onload = function() {
-        const isLoggedIn = localStorage.getItem('isLoggedIn');
-        const savedTheme = localStorage.getItem('theme') || 'light';
-        applyTheme(savedTheme);
-
-        if (isLoggedIn === 'true') {
-            showApp();
-        } else {
-            showLogin();
-        }
-    };
-
-    function handleLogin() {
-        const userInp = document.getElementById('username').value.trim();
-        const passInp = document.getElementById('password').value.trim();
-        const errorMsg = document.getElementById('error-msg');
-
-        if (userInp === 'gbao08' && passInp === '1') {
-            localStorage.setItem('isLoggedIn', 'true');
-            if (errorMsg) errorMsg.style.display = 'none';
-            showApp();
-        } else {
-            if (errorMsg) errorMsg.style.display = 'block';
-        }
-    }
-
-    function handleLogout() {
-        localStorage.removeItem('isLoggedIn');
-        showLogin();
-    }
-
-    function showApp() {
-        document.getElementById('login-box').style.display = 'none';
-        document.getElementById('main-app').style.display = 'block';
-        document.body.style.alignItems = 'flex-start';
-        document.getElementById('date').valueAsDate = new Date();
-        updateDashboard();
-    }
-
-    function showLogin() {
-        document.getElementById('login-box').style.display = 'block';
-        document.getElementById('main-app').style.display = 'none';
-        document.body.style.alignItems = 'center';
-    }
-
-    // --- XỬ LÝ SỐ LIỆU THU NHẬP RÒNG ---
-    let transactions = JSON.parse(localStorage.getItem('transactions')) || [];
-    let financeChartInstance = null;
-
-    function formatCurrency(num) {
-        return new Intl.NumberFormat('vi-VN', { style: 'currency', currency: 'VND' }).format(num);
-    }
-
-    function parseShortenedAmount(inputVal) {
-        let cleanInput = inputVal.trim().toLowerCase();
-        if (!cleanInput) return NaN;
-
-        let multiplier = 1;
-        if (cleanInput.endsWith('k')) {
-            multiplier = 1000;
-            cleanInput = cleanInput.slice(0, -1);
-        } else if (cleanInput.endsWith('m')) {
-            multiplier = 1000000;
-            cleanInput = cleanInput.slice(0, -1);
-        }
-
-        cleanInput = cleanInput.replace(',', '.');
-        const parsedNumber = parseFloat(cleanInput);
-        if (isNaN(parsedNumber)) return NaN;
-
-        return parsedNumber * multiplier;
-    }
-
-    // Hàm cập nhật Dashboard (Chỉ cộng tiền nếu trạng thái là approved)
-    function updateDashboard() {
-        let totalIncome = 0;
-        let totalExpense = 0;
-
-        transactions.sort((a, b) => new Date(b.date) - new Date(a.date));
-
-        const listElement = document.getElementById('transaction-list');
-        if(!listElement) return;
-        listElement.innerHTML = '';
-
-        transactions.forEach((t, index) => {
-            // Chỉ cộng dồn các giao dịch đã được Duyệt
-            if (t.status === 'approved') {
-                if (t.type === 'income') {
-                    totalIncome += t.amount;
-                } else {
-                    totalExpense += t.amount;
-                }
-            }
-
-            const formattedDate = new Date(t.date).toLocaleDateString('vi-VN');
-            
-            // Trạng thái hiển thị badge
-            const statusBadge = t.status === 'approved' 
-                ? `<span class="badge approved">✓ Đã kiểm duyệt</span>` 
-                : `<span class="badge pending">⏳ Chờ duyệt (Sai bill/Thiếu)</span>`;
-
-            const row = document.createElement('tr');
-            row.innerHTML = `
-                <td><strong>${formattedDate}</strong></td>
-                <td>${t.desc}</td>
-                <td class="${t.type === 'income' ? 'txt-income' : 'txt-expense'}">
-                    ${t.type === 'income' ? 'Thu Nhập' : 'Chi Phí'}
-                </td>
-                <td class="${t.type === 'income' ? 'txt-income' : 'txt-expense'}">
-                    ${t.type === 'income' ? '+' : '-'}${formatCurrency(t.amount)}
-                </td>
-                <td>${statusBadge}</td>
-                <td>
-                    ${t.billImg ? `<button class="btn-view-bill" onclick="viewBill(${index})">Xem Bill</button>` : ''}
-                    <button class="btn-delete" onclick="deleteTransaction(${index})">Xóa</button>
-                </td>
-            `;
-            listElement.appendChild(row);
-        });
-
-        const netIncome = totalIncome - totalExpense;
-
-        document.getElementById('total-income').innerText = formatCurrency(totalIncome);
-        document.getElementById('total-expense').innerText = formatCurrency(totalExpense);
-        
-        const netElement = document.getElementById('net-income');
-        netElement.innerText = formatCurrency(netIncome);
-        
-        if (netIncome >= 0) {
-            netElement.style.color = '#2ecc71';
-        } else {
-            netElement.style.color = '#e74c3c';
-        }
-
-        localStorage.setItem('transactions', JSON.stringify(transactions));
-        renderChart();
-
-        // LOGIC CHẠY THÔNG BÁO CẢNH BÁO CHO ADMIN KHI THU NHẬP ĐẠT 100K
-        if (totalIncome >= 100000) {
-            const warningMessage = "địt mẹ dẹp ngay quyết chiến và xóc đĩa đi nhé,embe của mày còn đợi mày cưới đó súc vật";
-            
-            // Hiển thị hộp thoại cảnh báo trên trình duyệt
-            setTimeout(() => {
-                alert(`⚠️ CẢNH BÁO ADMIN:\n\n"${warningMessage.toUpperCase()}"`);
-            }, 500);
-
-            // Bắn tin cảnh báo trực tiếp về Telegram
-            const teleWarning = `⚠️ <b>CẢNH BÁO ADMIN (Thu nhập đạt ${formatCurrency(totalIncome)})</b>\n\n<i>"${warningMessage}"</i>`;
-            sendRawTelegram(teleWarning);
-        }
-    }
-
-    // Hàm thêm giao dịch và chạy AI OCR kiểm tra ảnh
-    function addTransaction() {
-        const descInput = document.getElementById('desc');
-        const amountInput = document.getElementById('amount');
-        const dateInput = document.getElementById('date');
-        const typeInput = document.getElementById('type');
-        const fileInput = document.getElementById('bill-file');
-
-        const desc = descInput.value.trim();
-        const amount = parseShortenedAmount(amountInput.value);
-        const date = dateInput.value;
-        const type = typeInput.value;
-
-        if (!desc || isNaN(amount) || amount <= 0 || !date) {
-            alert('Vui lòng điền đầy đủ nội dung, số tiền và ngày!');
-            return;
-        }
-
-        if (fileInput.files.length === 0) {
-            alert('Bắt buộc phải tải tệp ảnh bill lên để hệ thống kiểm tra và duyệt!');
-            return;
-        }
-
-        const file = fileInput.files[0];
-        const reader = new FileReader();
-
-        // Hiện trạng thái AI đang tải/xử lý
-        const ocrStatus = document.getElementById('ocr-status');
-        ocrStatus.style.display = 'block';
-
-        reader.onload = function(event) {
-            const base64Image = event.target.result; // Chuyển ảnh thành chuỗi base64 để lưu trữ cục bộ
-
-            // Sử dụng AI Tesseract.js để đọc chữ trên ảnh
-            Tesseract.recognize(
-                base64Image,
-                'eng+vie', // Hỗ trợ tiếng Anh và tiếng Việt
-                { logger: m => console.log(m) }
-            ).then(({ data: { text } }) => {
-                ocrStatus.style.display = 'none';
-                
-                // Chuẩn hóa văn bản quét được (Xóa dấu chấm, dấu phẩy, khoảng trắng)
-                const cleanedText = text.replace(/[,.\s]/g, '');
-                const targetAmountStr = amount.toString(); // Số tiền nhập thực tế (ví dụ: "100000")
-
-                let isApproved = false;
-
-                // Kiểm tra xem số tiền bạn nhập có xuất hiện trong chữ quét được từ hóa đơn không
-                if (cleanedText.includes(targetAmountStr)) {
-                    alert(`🎉 Xác minh thành công! AI tìm thấy khớp số tiền ${formatCurrency(amount)} trên hóa đơn.`);
-                    isApproved = true;
-                } else {
-                    alert(`⚠️ Cảnh báo: AI không tìm thấy con số ${formatCurrency(amount)} trên Bill vừa tải lên!\nGiao dịch tạm thời ở trạng thái "Chờ duyệt" và chưa được cộng vào hệ thống.`);
-                    isApproved = false;
-                }
-
-                // Lưu giao dịch vào mảng
-                const newTransaction = {
-                    desc,
-                    amount,
-                    date,
-                    type,
-                    billImg: base64Image, // Lưu ảnh
-                    status: isApproved ? 'approved' : 'pending' // Gán trạng thái
-                };
-
-                transactions.push(newTransaction);
-                updateDashboard();
-
-                // Gửi thông báo chi tiết về điện thoại qua Telegram
-                sendTelegramNotification(newTransaction, isApproved);
-
-                // Reset Form
-                descInput.value = '';
-                amountInput.value = '';
-                fileInput.value = '';
-
-            }).catch(err => {
-                console.error(err);
-                ocrStatus.style.display = 'none';
-                alert('Không thể nhận diện hóa đơn. Giao dịch được chuyển sang trạng thái "Chờ duyệt".');
-                
-                // Trường hợp lỗi thư viện, lưu ở dạng Chờ Duyệt để đối soát thủ công
-                const newTransaction = {
-                    desc, amount, date, type,
-                    billImg: base64Image,
-                    status: 'pending'
-                };
-                transactions.push(newTransaction);
-                updateDashboard();
-
-                // Vẫn gửi tin nhắn báo về Telegram có giao dịch bị lỗi quét OCR
-                sendTelegramNotification(newTransaction, false);
-            });
+    <!-- Javascript -->
+    <script>
+        // --- KHỞI TẠO TÀI KHOẢN MẶC ĐỊNH ---
+        const DEFAULT_USERS = {
+            "gbao08": "1"
         };
+        
+        let users = JSON.parse(localStorage.getItem('finance_users')) || DEFAULT_USERS;
+        let transactions = JSON.parse(localStorage.getItem('transactions')) || [];
+        let currentUser = localStorage.getItem('currentUser') || null;
 
-        reader.readAsDataURL(file);
-    }
+        localStorage.setItem('tgToken', '8910656676:AAHo4mkt-ul-bYutXL1sloponqB-C7k4ldU');
+        localStorage.setItem('tgChatId', '-5515276053');
 
-    function deleteTransaction(index) {
-        if (confirm('Bạn chắc chắn muốn xóa giao dịch này?')) {
-            transactions.splice(index, 1);
-            updateDashboard();
-        }
-    }
+        let detectedAmount = 0;
+        let detectedType = "income"; 
+        let detectedSource = "";
 
-    // Quản lý Modal Xem Bill
-    function viewBill(index) {
-        const t = transactions[index];
-        if (t && t.billImg) {
-            document.getElementById('modal-title').innerText = `Hóa đơn cho: ${t.desc}`;
-            document.getElementById('modal-img').src = t.billImg;
-            document.getElementById('bill-modal').style.display = 'flex';
-        }
-    }
-
-    function closeModal() {
-        document.getElementById('bill-modal').style.display = 'none';
-    }
-
-    // --- BIỂU ĐỒ ---
-    function renderChart() {
-        const filterType = document.getElementById('chart-filter-type').value;
-        const ctx = document.getElementById('financeChart').getContext('2d');
-
-        let groupedData = {};
-
-        // Chỉ đưa các giao dịch đã duyệt (approved) lên biểu đồ thống kê
-        const approvedTransactions = transactions.filter(t => t.status === 'approved');
-
-        approvedTransactions.forEach(t => {
-            const d = new Date(t.date);
-            let key = '';
-
-            if (filterType === 'day') {
-                key = d.toLocaleDateString('vi-VN');
-            } else if (filterType === 'month') {
-                key = `Thg ${d.getMonth() + 1}/${d.getFullYear()}`;
-            } else if (filterType === 'year') {
-                key = `Năm ${d.getFullYear()}`;
-            }
-
-            if (!groupedData[key]) {
-                groupedData[key] = { income: 0, expense: 0 };
-            }
-
-            if (t.type === 'income') {
-                groupedData[key].income += t.amount;
+        // Kiểm tra xem đã đăng nhập chưa khi mở trang
+        document.addEventListener("DOMContentLoaded", () => {
+            if (currentUser) {
+                showApp();
             } else {
-                groupedData[key].expense += t.amount;
+                showLogin();
             }
         });
 
-        const sortedLabels = Object.keys(groupedData).sort((a, b) => {
-            let dateA, dateB;
-            if (filterType === 'day') {
-                const partsA = a.split('/'); const partsB = b.split('/');
-                dateA = new Date(partsA[2], partsA[1]-1, partsA[0]);
-                dateB = new Date(partsB[2], partsB[1]-1, partsB[0]);
-            } else if (filterType === 'month') {
-                const matchA = a.match(/Thg (\d+)\/(\d+)/); const matchB = b.match(/Thg (\d+)\/(\d+)/);
-                dateA = new Date(matchA[2], matchA[1] - 1, 1);
-                dateB = new Date(matchB[2], matchB[1] - 1, 1);
-            } else {
-                dateA = new Date(a.replace('Năm ', ''), 0, 1);
-                dateB = new Date(b.replace('Năm ', ''), 0, 1);
-            }
-            return dateA - dateB;
-        });
-
-        const incomes = []; const expenses = []; const netIncomes = [];
-
-        sortedLabels.forEach(label => {
-            const inc = groupedData[label].income;
-            const exp = groupedData[label].expense;
-            incomes.push(inc);
-            expenses.push(exp);
-            netIncomes.push(inc - exp);
-        });
-
-        if (financeChartInstance) {
-            financeChartInstance.destroy();
+        // --- HÀM ĐIỀU PHỐI GIAO DIỆN ĐĂNG NHẬP ---
+        function showLogin() {
+            document.getElementById('loginScreen').classList.remove('hidden');
+            document.getElementById('mainApp').classList.add('hidden');
+            document.getElementById('motivationAlert').classList.add('hidden');
         }
 
-        const currentTheme = localStorage.getItem('theme') || 'light';
-        const gridColor = currentTheme === 'dark' ? '#3f445e' : '#e2e8f0';
-        const labelTextColor = currentTheme === 'dark' ? '#e2e8f0' : '#2c3e50';
+        function showApp() {
+            document.getElementById('loginScreen').classList.add('hidden');
+            document.getElementById('mainApp').classList.remove('hidden');
+            document.getElementById('currentUserLabel').innerText = `Tài khoản: ${currentUser}`;
+            
+            // Nếu là admin (gbao08) thì hiển thị bảng điều khiển tạo user
+            if (currentUser === 'gbao08') {
+                document.getElementById('adminPanel').classList.remove('hidden');
+                document.getElementById('userTargetPanel').classList.add('hidden'); // Admin không có bảng này
+                updateUserList();
+            } else {
+                document.getElementById('adminPanel').classList.add('hidden');
+                document.getElementById('userTargetPanel').classList.remove('hidden'); // Hiện cho User thường
+                loadUserTarget();
+            }
+            updateUI();
+        }
 
-        financeChartInstance = new Chart(ctx, {
-            type: 'bar',
-            data: {
-                labels: sortedLabels,
-                datasets: [
-                    { label: 'Thu Nhập', data: incomes, backgroundColor: '#2ecc71', borderRadius: 4 },
-                    { label: 'Chi / Thuế', data: expenses, backgroundColor: '#e74c3c', borderRadius: 4 },
-                    {
-                        label: 'Thu Nhập Ròng', data: netIncomes, type: 'line',
-                        borderColor: '#3498db', backgroundColor: 'rgba(52, 152, 219, 0.1)', fill: true, tension: 0.2
+        // Xử lý Sự kiện Đăng nhập
+        document.getElementById('loginForm').addEventListener('submit', (e) => {
+            e.preventDefault();
+            const username = document.getElementById('usernameInput').value.trim();
+            const password = document.getElementById('passwordInput').value.trim();
+
+            if (users[username] && users[username] === password) {
+                currentUser = username;
+                localStorage.setItem('currentUser', currentUser);
+                document.getElementById('loginError').classList.add('hidden');
+                // Reset form login
+                document.getElementById('usernameInput').value = '';
+                document.getElementById('passwordInput').value = '';
+                showApp();
+            } else {
+                document.getElementById('loginError').classList.remove('hidden');
+            }
+        });
+
+        // Xử lý Đăng xuất
+        document.getElementById('btnLogout').addEventListener('click', () => {
+            currentUser = null;
+            localStorage.removeItem('currentUser');
+            showLogin();
+        });
+
+        // --- QUẢN LÝ USER CỦA ADMIN ---
+        document.getElementById('createUserForm').addEventListener('submit', (e) => {
+            e.preventDefault();
+            const newUsername = document.getElementById('newUsername').value.trim();
+            const newPassword = document.getElementById('newPassword').value.trim();
+
+            if (users[newUsername]) {
+                alert("Tài khoản này đã tồn tại trên hệ thống!");
+                return;
+            }
+
+            users[newUsername] = newPassword;
+            localStorage.setItem('finance_users', JSON.stringify(users));
+            
+            alert(`Đã tạo thành công tài khoản: ${newUsername}`);
+            document.getElementById('newUsername').value = '';
+            document.getElementById('newPassword').value = '';
+            updateUserList();
+        });
+
+        // Cập nhật hiển thị danh sách tài khoản cho Admin xem
+        function updateUserList() {
+            const listContainer = document.getElementById('userList');
+            listContainer.innerHTML = '';
+            Object.keys(users).forEach(user => {
+                const li = document.createElement('li');
+                li.className = 'py-1 flex justify-between items-center';
+                li.innerHTML = `
+                    <span class="font-medium">${user} ${user === 'gbao08' ? '<span class="text-blue-500 font-bold">(Admin)</span>' : ''}</span>
+                    <span class="text-gray-400">MK: ${users[user]}</span>
+                `;
+                listContainer.appendChild(li);
+            });
+        }
+
+        // --- XỬ LÝ MỤC TIÊU RIÊNG TƯ CỦA USER ---
+        function loadUserTarget() {
+            // Đọc cấu hình dựa trên tên đăng nhập hiện tại để tránh đè dữ liệu giữa các User
+            const storedTarget = JSON.parse(localStorage.getItem(`target_${currentUser}`)) || { amount: '', msg: '' };
+            document.getElementById('targetAmount').value = storedTarget.amount;
+            document.getElementById('targetMsg').value = storedTarget.msg;
+        }
+
+        document.getElementById('targetForm').addEventListener('submit', (e) => {
+            e.preventDefault();
+            const amount = document.getElementById('targetAmount').value;
+            const msg = document.getElementById('targetMsg').value;
+
+            localStorage.setItem(`target_${currentUser}`, JSON.stringify({ amount, msg }));
+            alert("Đã lưu mục tiêu cá nhân thành công!");
+            updateUI(); // Cập nhật lại giao diện để kiểm tra điều kiện đạt mục tiêu
+        });
+
+        // --- TÍNH NĂNG CHUYỂN ĐỔI CHỮ VIẾT TẮT (10k, 1.5m, 2tr) ---
+        function parseShortcutMoney(inputVal) {
+            if (!inputVal) return 0;
+            let cleanVal = inputVal.toString().trim().toLowerCase();
+            cleanVal = cleanVal.replace(/,/g, '.');
+
+            let rate = 1;
+            if (cleanVal.endsWith('k')) {
+                rate = 1000;
+                cleanVal = cleanVal.replace('k', '');
+            } else if (cleanVal.endsWith('m')) {
+                rate = 1000000;
+                cleanVal = cleanVal.replace('m', '');
+            } else if (cleanVal.endsWith('tr')) {
+                rate = 1000000;
+                cleanVal = cleanVal.replace('tr', '');
+            }
+
+            const num = parseFloat(cleanVal);
+            return isNaN(num) ? 0 : Math.round(num * rate);
+        }
+
+        document.getElementById('amountInputText').addEventListener('input', (e) => {
+            const parsedVal = parseShortcutMoney(e.target.value);
+            document.getElementById('amount').value = parsedVal;
+            document.getElementById('previewNumber').innerText = `👉 Giá trị thực tế: ${parsedVal.toLocaleString('vi-VN')}đ`;
+        });
+
+        // Cập nhật giao diện lịch sử và kiểm duyệt mục tiêu riêng
+        function updateUI() {
+            const tableBody = document.getElementById('historyTable');
+            tableBody.innerHTML = '';
+            let totalIncome = 0;
+            let totalExpense = 0;
+
+            // Biến tính tổng thu nhập RIÊNG của User hiện tại để đối chiếu mục tiêu
+            let currentUserIncome = 0;
+
+            transactions.forEach(item => {
+                const isIncome = item.type === 'income';
+                if (isIncome) {
+                    totalIncome += item.amount;
+                    if (item.user === currentUser) {
+                        currentUserIncome += item.amount;
                     }
-                ]
-            },
-            options: {
-                responsive: true,
-                maintainAspectRatio: false,
-                plugins: { legend: { labels: { color: labelTextColor } } },
-                scales: {
-                    x: { grid: { color: gridColor }, ticks: { color: labelTextColor } },
-                    y: {
-                        grid: { color: gridColor },
-                        ticks: {
-                            color: labelTextColor,
-                            callback: function(value) {
-                                return value >= 1000000 ? (value / 1000000) + 'M' : value >= 1000 ? (value / 1000) + 'K' : value;
-                            }
-                        }
-                    }
+                } else {
+                    totalExpense += item.amount;
                 }
+
+                const row = document.createElement('tr');
+                row.className = 'hover:bg-gray-50';
+                row.innerHTML = `
+                    <td class="py-3 text-xs text-gray-400">${item.time}</td>
+                    <td class="py-3 text-xs font-semibold text-gray-600">${item.user || 'Unknown'}</td>
+                    <td class="py-3">
+                        <span class="px-2 py-0.5 rounded text-[11px] font-bold ${isIncome ? 'bg-green-100 text-green-700' : 'bg-red-100 text-red-700'}">
+                            ${isIncome ? 'THU NHẬP' : 'CHI TIÊU'}
+                        </span>
+                    </td>
+                    <td class="py-3 font-medium text-gray-700">${item.source}</td>
+                    <td class="py-3 text-right font-bold ${isIncome ? 'text-green-600' : 'text-red-600'}">
+                        ${isIncome ? '+' : '-'}${item.amount.toLocaleString()}đ
+                    </td>
+                `;
+                tableBody.appendChild(row);
+            });
+
+            document.getElementById('totalIncome').innerText = `Thu: +${totalIncome.toLocaleString()}đ`;
+            document.getElementById('totalExpense').innerText = `Chi: -${totalExpense.toLocaleString()}đ`;
+            localStorage.setItem('transactions', JSON.stringify(transactions));
+
+            // KIỂM TRA MỤC TIÊU RIÊNG TƯ (Chỉ kích hoạt cho User thường, không áp dụng cho Admin)
+            if (currentUser && currentUser !== 'gbao08') {
+                const storedTarget = JSON.parse(localStorage.getItem(`target_${currentUser}`));
+                const alertBox = document.getElementById('motivationAlert');
+                const alertMsgText = document.getElementById('motivationMessage');
+
+                if (storedTarget && storedTarget.amount && currentUserIncome >= parseInt(storedTarget.amount)) {
+                    alertBox.classList.remove('hidden');
+                    alertMsgText.innerText = storedTarget.msg ? `"${storedTarget.msg}"` : `"Chúc mừng bạn đã hoàn thành xuất sắc mục tiêu tự đề ra!"`;
+                } else {
+                    alertBox.classList.add('hidden');
+                }
+            } else {
+                document.getElementById('motivationAlert').classList.add('hidden');
+            }
+        }
+
+        // Gửi tin nhắn Telegram kèm tên thành viên thực hiện
+        async function sendTelegramMessage(amount, source, type) {
+            const token = document.getElementById('tgToken').value;
+            const chatId = document.getElementById('tgChatId').value;
+            if (!token || !chatId) return;
+
+            const isIncome = type === 'income';
+            const icon = isIncome ? '🟢' : '🔴';
+            const statusText = isIncome ? 'THU NHẬP MỚI (+)' : 'CHI TIÊU MỚI (-)';
+            const sign = isIncome ? '+' : '-';
+
+            const text = `${icon} *${statusText}*\n\n👤 *Người thực hiện:* ${currentUser}\n💵 *Số tiền:* ${sign}${amount.toLocaleString()} VNĐ\n📝 *Nội dung:* ${source}\n📅 *Thời gian:* ${new Date().toLocaleString('vi-VN')}`;
+
+            try {
+                await fetch(`https://api.telegram.org/bot${token}/sendMessage`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ chat_id: chatId, text: text, parse_mode: 'Markdown' })
+                });
+            } catch (err) {
+                console.error("Lỗi gửi Telegram: " + err.message);
+            }
+        }
+
+        // Gửi file ảnh khi OCR lỗi sang Telegram
+        async function sendTelegramPhotoForVerification(file) {
+            const token = document.getElementById('tgToken').value;
+            const chatId = document.getElementById('tgChatId').value;
+            if (!token || !chatId) return;
+
+            const formData = new FormData();
+            formData.append('chat_id', chatId);
+            formData.append('photo', file);
+            formData.append('caption', `❌ *CẢNH BÁO LỖI QUÉT BILL*\n\n👤 *Nhân viên up ảnh:* ${currentUser}\n🤖 AI không nhận dạng được số tiền.\nVui lòng admin tự nhập tay dựa vào ảnh!`);
+            formData.append('parse_mode', 'Markdown');
+
+            try {
+                const response = await fetch(`https://api.telegram.org/bot${token}/sendPhoto`, {
+                    method: 'POST',
+                    body: formData
+                });
+                if (response.ok) {
+                    alert("Bill lỗi đã được gửi trực tiếp về nhóm Telegram!");
+                } else {
+                    throw new Error("Không thể tải ảnh lên Telegram.");
+                }
+            } catch (err) {
+                console.error("Lỗi gửi Telegram Photo: ", err);
+            }
+        }
+
+        // Thêm thủ công hoặc từ OCR
+        document.getElementById('transactionForm').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const txType = document.getElementById('txType').value;
+            const amount = parseInt(document.getElementById('amount').value) || 0;
+            const sourceInput = document.getElementById('source');
+
+            if (amount <= 0) {
+                alert("Số tiền không hợp lệ!");
+                return;
+            }
+
+            const newItem = {
+                id: Date.now(),
+                user: currentUser, // Gắn kèm tài khoản đang thao tác
+                type: txType,
+                amount,
+                source: sourceInput.value,
+                time: new Date().toLocaleTimeString('vi-VN') + ' ' + new Date().toLocaleDateString('vi-VN')
+            };
+
+            transactions.unshift(newItem);
+            updateUI();
+
+            await sendTelegramMessage(amount, sourceInput.value, txType);
+
+            // Reset form
+            document.getElementById('amountInputText').value = '';
+            document.getElementById('amount').value = '';
+            document.getElementById('previewNumber').innerText = `👉 Giá trị thực tế: 0đ`;
+            sourceInput.value = '';
+        });
+
+        // AI Quét Hóa Đơn & Xử lý gửi ảnh khi gặp lỗi quét số tiền
+        document.getElementById('billInput').addEventListener('change', async (e) => {
+            const file = e.target.files[0];
+            if (!file) return;
+
+            const ocrStatus = document.getElementById('ocrStatus');
+            const resultContainer = document.getElementById('ocrResultContainer');
+            const rawTextElement = document.getElementById('ocrRawText');
+            const ocrTitle = document.getElementById('ocrTitle');
+            const btnApplyOcr = document.getElementById('btnApplyOcr');
+
+            ocrStatus.classList.remove('hidden');
+            resultContainer.classList.add('hidden');
+
+            try {
+                const result = await Tesseract.recognize(file, 'eng+vie');
+                const rawText = result.data.text;
+                const lowerText = rawText.toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "");
+
+                const receiveKeywords = ['nhan', 'den', 'cong', 'received', 'credited', 'nap', 'inward', '+', 'giao dich nhan'];
+                const transferKeywords = ['chuyen', 'di', 'tru', 'thanh toan', 'sent', 'debited', 'outward', 'rut', 'phi', '-', 'giao dich chuyen'];
+
+                let receiveScore = 0;
+                let transferScore = 0;
+
+                receiveKeywords.forEach(kw => { if (lowerText.includes(kw)) receiveScore += 2; });
+                transferKeywords.forEach(kw => { if (lowerText.includes(kw)) transferScore += 2; });
+
+                if (rawText.includes('+')) receiveScore += 5;
+                if (rawText.includes('-') || rawText.includes('–')) transferScore += 5;
+
+                if (receiveScore >= transferScore) {
+                    detectedType = "income";
+                    detectedSource = "Nhận từ bill ngân hàng";
+                } else {
+                    detectedType = "expense";
+                    detectedSource = "Thanh toán qua bill ngân hàng";
+                }
+
+                const moneyRegex = /(?:[+\s-]|^)([\d]{1,3}(?:[.,\s]\d{3})+)(?:\s?(?:VND|đ|d|vnd))?/gi;
+                let matches = [];
+                let match;
+                while ((match = moneyRegex.exec(rawText)) !== null) {
+                    matches.push(match[1]);
+                }
+
+                let maxAmount = 0;
+                matches.forEach(m => {
+                    const cleaned = parseInt(m.replace(/[^0-9]/g, ''));
+                    if (cleaned > maxAmount && cleaned < 500000000) { 
+                        maxAmount = cleaned;
+                    }
+                });
+
+                if (maxAmount > 0) {
+                    detectedAmount = maxAmount;
+
+                    if (detectedType === 'income') {
+                        resultContainer.className = "mt-4 p-4 bg-green-50 border border-green-200 rounded-xl";
+                        ocrTitle.className = "text-xs font-bold text-green-800 mb-1";
+                        ocrTitle.innerText = "✓ PHÁT HIỆN BILL NHẬN TIỀN (THU NHẬP):";
+                        rawTextElement.innerHTML = `Số tiền nhận: <strong class="text-green-600 text-xl">+${maxAmount.toLocaleString()}đ</strong>`;
+                        btnApplyOcr.className = "bg-green-600 hover:bg-green-700 text-white text-xs px-3 py-1.5 rounded-lg transition-colors font-medium";
+                    } else {
+                        resultContainer.className = "mt-4 p-4 bg-red-50 border border-red-200 rounded-xl";
+                        ocrTitle.className = "text-xs font-bold text-red-800 mb-1";
+                        ocrTitle.innerText = "⚠️ PHÁT HIỆN BILL CHUYỂN TIỀN (CHI TIÊU):";
+                        rawTextElement.innerHTML = `Số tiền chi: <strong class="text-red-600 text-xl">-${maxAmount.toLocaleString()}đ</strong>`;
+                        btnApplyOcr.className = "bg-red-600 hover:bg-red-700 text-white text-xs px-3 py-1.5 rounded-lg transition-colors font-medium";
+                    }
+
+                    resultContainer.classList.remove('hidden');
+                } else {
+                    ocrStatus.innerHTML = "<span class='text-red-600'>❌ Không nhận diện được số tiền. Đang gửi bill sang Telegram...</span>";
+                    await sendTelegramPhotoForVerification(file);
+                }
+
+            } catch (err) {
+                alert("Lỗi hệ thống phân tích hình ảnh: " + err.message);
+            } finally {
+                ocrStatus.classList.add('hidden');
+                ocrStatus.innerHTML = "<span class='animate-spin'>🔄</span> Hệ thống đang đọc chữ và phân tách dòng tiền...";
             }
         });
-    }
-</script>
 
+        document.getElementById('btnApplyOcr').addEventListener('click', () => {
+            document.getElementById('txType').value = detectedType;
+            document.getElementById('amount').value = detectedAmount;
+            document.getElementById('amountInputText').value = detectedAmount;
+            document.getElementById('previewNumber').innerText = `👉 Giá trị thực tế: ${detectedAmount.toLocaleString('vi-VN')}đ`;
+            document.getElementById('source').value = detectedSource;
+            
+            document.getElementById('transactionForm').dispatchEvent(new Event('submit'));
+            document.getElementById('ocrResultContainer').classList.add('hidden');
+        });
+
+        document.getElementById('btnCancelOcr').addEventListener('click', () => {
+            document.getElementById('ocrResultContainer').classList.add('hidden');
+        });
+    </script>
 </body>
 </html>
