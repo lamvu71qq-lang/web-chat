@@ -3,906 +3,483 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Hệ Thống Quản Trị & Dịch Vụ Siêu Cấp</title>
+    <title>Quản Lý Thu Nhập Ròng</title>
     <style>
         :root {
-            --bg-body: #f0f2f5;
-            --bg-container: white;
-            --text-color: #333;
-            --border-color: #ddd;
-            --msg-theirs: #e4e6eb;
-            --msg-theirs-text: black;
-            --input-bg: white;
-            --section-title: #65676b;
-            --bg-service: #f8f9fa;
+            --primary-color: #2ecc71;
+            --danger-color: #e74c3c;
+            --dark-color: #2c3e50;
+            --light-bg: #f8f9fa;
+            --blue-color: #3498db;
         }
-        [data-theme="dark"] {
-            --bg-body: #18191a;
-            --bg-container: #242526;
-            --text-color: #e4e6eb;
-            --border-color: #3e4042;
-            --msg-theirs: #3a3b3c;
-            --msg-theirs-text: #e4e6eb;
-            --input-bg: #3a3b3c;
-            --section-title: #b0b3b8;
-            --bg-service: #2f3031;
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background-color: #eef2f7;
+            margin: 0;
+            padding: 20px;
+            color: var(--dark-color);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 90vh;
         }
-        
-        body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background: var(--bg-body); color: var(--text-color); display: flex; justify-content: center; align-items: center; height: 100vh; margin: 0; transition: background 0.3s; }
-        .container { width: 450px; height: 740px; background: var(--bg-container); border-radius: 12px; box-shadow: 0 8px 24px rgba(0,0,0,0.15); display: flex; flex-direction: column; overflow: hidden; position: relative; transition: background 0.3s; }
-        .screen { display: none; flex-direction: column; height: 100%; padding: 15px; box-sizing: border-box; overflow-y: auto; }
-        .active { display: flex; }
-        
-        input, select { padding: 9px; margin-bottom: 8px; border: 1px solid var(--border-color); border-radius: 8px; outline: none; background: var(--input-bg); color: var(--text-color); font-size: 14px; }
-        button { padding: 10px; background: #0084ff; color: white; border: none; border-radius: 8px; cursor: pointer; font-weight: bold; font-size: 13px; transition: background 0.2s; }
-        button:hover { background: #0066cc; }
-        
-        .theme-toggle { position: absolute; top: 12px; right: 12px; background: none; border: none; font-size: 18px; cursor: pointer; z-index: 10; padding: 0; width: auto; }
-        
-        .admin-badge { color: #ffca28; font-weight: bold; text-shadow: 0 0 5px #fffa65; animation: blink 1.5s infinite; margin-left: 4px; }
-        .mod-badge { color: #00dbde; font-weight: bold; text-shadow: 0 0 5px #fc00ff; margin-left: 4px; font-size: 12px; }
-        @keyframes blink { 0%, 100% { opacity: 0.7; } 50% { opacity: 1; } }
 
-        #user-info { font-size: 14px; margin-bottom: 10px; border-bottom: 1px solid var(--border-color); padding-bottom: 8px; flex-shrink: 0; }
-        .user-meta { display: flex; justify-content: space-between; align-items: center; margin-bottom: 5px; }
-        .balance-badge { background: #28a745; color: white; padding: 3px 8px; border-radius: 12px; font-weight: bold; font-size: 12px; }
-        
-        .deposit-blink-btn { background: #ffc107 !important; color: #000 !important; font-size: 11px !important; padding: 3px 8px !important; border-radius: 12px !important; animation: pulse-yellow 1.2s infinite; font-weight: bold; margin-left: 5px; }
-        @keyframes pulse-yellow { 0% { box-shadow: 0 0 0 0 rgba(255, 193, 7, 0.7); } 70% { box-shadow: 0 0 0 6px rgba(255, 193, 7, 0); } 100% { box-shadow: 0 0 0 0 rgba(255, 193, 7, 0); } }
+        /* Khung Đăng Nhập */
+        .login-box {
+            background: #fff;
+            padding: 40px 30px;
+            border-radius: 12px;
+            box-shadow: 0 4px 25px rgba(0,0,0,0.1);
+            width: 100%;
+            max-width: 380px;
+            text-align: center;
+        }
 
-        .section-label { font-size: 11px; font-weight: bold; color: var(--section-title); text-transform: uppercase; margin: 6px 0 4px 0; letter-spacing: 0.5px; display: flex; justify-content: space-between; }
-        .list-wrapper { flex: 1; overflow-y: auto; display: flex; flex-direction: column; gap: 5px; }
-        
-        .user-item { padding: 8px; background: var(--bg-body); border: 1px solid var(--border-color); border-radius: 8px; display: flex; flex-direction: column; gap: 4px; }
-        .user-row { display: flex; justify-content: space-between; align-items: center; }
-        .actions-row { display: flex; gap: 4px; }
-        .actions-row button { padding: 4px 8px; font-size: 11px; border-radius: 6px; }
+        .login-box h2 {
+            margin-bottom: 25px;
+            color: var(--dark-color);
+        }
 
-        .services-grid { display: flex; gap: 6px; margin-bottom: 5px; flex-shrink: 0; }
-        .service-card { flex: 1; background: var(--bg-service); border: 1px solid var(--border-color); border-radius: 8px; padding: 8px; text-align: center; display: flex; flex-direction: column; justify-content: space-between; }
-        .service-title { font-size: 11px; font-weight: bold; height: 32px; display: flex; align-items: center; justify-content: center; }
-        .service-price { font-size: 12px; color: #28a745; font-weight: bold; margin: 2px 0; }
-        .service-card button { padding: 5px; font-size: 11px; width: 100%; margin-top: 4px; }
+        .login-group {
+            margin-bottom: 20px;
+            text-align: left;
+        }
 
-        #chat-header { font-weight: bold; padding-bottom: 8px; border-bottom: 1px solid var(--border-color); display: flex; justify-content: space-between; align-items: center; }
-        #messages { flex: 1; padding: 10px 0; overflow-y: auto; display: flex; flex-direction: column; gap: 8px; }
-        .message { padding: 8px 12px; border-radius: 15px; max-width: 75%; word-wrap: break-word; font-size: 14px; }
-        .mine { background: #0084ff; color: white; align-self: flex-end; border-bottom-right-radius: 4px; }
-        .theirs { background: var(--msg-theirs); color: var(--msg-theirs-text); align-self: flex-start; border-bottom-left-radius: 4px; }
-        
-        #input-area { display: flex; gap: 5px; padding-top: 8px; border-top: 1px solid var(--border-color); }
-        #message-input { flex: 1; margin: 0; border-radius: 20px; padding-left: 12px; }
-        #send-btn { border-radius: 20px; padding: 0 15px; }
+        .login-group label {
+            display: block;
+            margin-bottom: 6px;
+            font-size: 14px;
+            font-weight: 600;
+        }
 
-        .admin-tools { background: #fff3cd; color: #333; padding: 4px; border-radius: 6px; border: 1px dashed #ffc107; margin-top: 3px; display: flex; flex-wrap: wrap; gap: 4px; font-size: 10px; }
-        .admin-tools button { padding: 3px 6px; font-size: 9px; border-radius: 4px; font-weight: bold; }
-        .forgot-link { color: #0084ff; text-align: right; font-size: 12px; cursor: pointer; margin-bottom: 10px; text-decoration: underline; }
-        
-        .result-box { background: #d4edda; color: #155724; border: 1px solid #c3e6cb; padding: 10px; border-radius: 8px; font-size: 13px; margin-bottom: 8px; font-weight: bold; text-align: center; }
-        .inbox-item { padding: 8px; background: #e3f2fd; border: 1px solid #90caf9; border-radius: 8px; display: flex; justify-content: space-between; align-items: center; font-size: 13px; font-weight: 500; color: #0d47a1; }
-        [data-theme="dark"] .inbox-item { background: #1e3a5f; border-color: #1565c0; color: #e3f2fd; }
+        .login-group input {
+            width: 100%;
+            padding: 12px;
+            box-sizing: border-box;
+            border: 1px solid #ddd;
+            border-radius: 6px;
+            font-size: 15px;
+        }
 
-        .modal-form { display: none; background: var(--bg-service); border: 1px solid var(--border-color); border-radius: 8px; padding: 12px; margin-bottom: 10px; flex-direction: column; gap: 6px; }
+        .btn-login {
+            width: 100%;
+            padding: 12px;
+            background-color: var(--blue-color);
+            color: white;
+            border: none;
+            border-radius: 6px;
+            font-size: 16px;
+            font-weight: bold;
+            cursor: pointer;
+            transition: background 0.2s;
+        }
+
+        .btn-login:hover {
+            background-color: #2980b9;
+        }
+
+        .error-msg {
+            color: var(--danger-color);
+            font-size: 14px;
+            margin-top: 15px;
+            display: none;
+        }
+
+        /* Khung Ứng Dụng Chính (Ẩn mặc định) */
+        .container {
+            max-width: 800px;
+            width: 100%;
+            background: #fff;
+            padding: 30px;
+            border-radius: 12px;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.05);
+            display: none;
+        }
+
+        .header-app {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 30px;
+            border-bottom: 2px solid #eee;
+            padding-bottom: 15px;
+        }
+
+        .header-app h1 {
+            margin: 0;
+            font-size: 26px;
+        }
+
+        .btn-logout {
+            background: transparent;
+            border: 1px solid #95a5a6;
+            color: #7f8c8d;
+            padding: 8px 15px;
+            border-radius: 6px;
+            cursor: pointer;
+            font-weight: 600;
+        }
+
+        .btn-logout:hover {
+            background: #7f8c8d;
+            color: white;
+        }
+
+        /* Thống kê tổng quan */
+        .dashboard {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 20px;
+            margin-bottom: 30px;
+        }
+
+        .card {
+            background: var(--light-bg);
+            padding: 20px;
+            border-radius: 8px;
+            text-align: center;
+            border-left: 5px solid #ccc;
+        }
+
+        .card.income { border-left-color: var(--primary-color); }
+        .card.expense { border-left-color: var(--danger-color); }
+        .card.net { border-left-color: var(--blue-color); }
+
+        .card h3 {
+            margin: 0 0 10px 0;
+            font-size: 14px;
+            text-transform: uppercase;
+            color: #7f8c8d;
+        }
+
+        .card p {
+            margin: 0;
+            font-size: 20px;
+            font-weight: bold;
+        }
+
+        /* Form nhập liệu */
+        .form-section {
+            background: var(--light-bg);
+            padding: 20px;
+            border-radius: 8px;
+            margin-bottom: 30px;
+        }
+
+        .form-row {
+            display: grid;
+            grid-template-columns: 2fr 1.5fr 1fr auto;
+            gap: 10px;
+            margin-bottom: 10px;
+        }
+
+        input, select, button {
+            padding: 10px 15px;
+            border: 1px solid #ddd;
+            border-radius: 6px;
+            font-size: 14px;
+            outline: none;
+        }
+
+        input:focus, select:focus {
+            border-color: var(--blue-color);
+        }
+
+        button.btn-add {
+            background-color: var(--blue-color);
+            color: white;
+            border: none;
+            cursor: pointer;
+            font-weight: bold;
+            transition: background 0.2s;
+        }
+
+        button.btn-add:hover {
+            background-color: #2980b9;
+        }
+
+        .input-hint {
+            font-size: 12px;
+            color: #7f8c8d;
+            margin-top: 5px;
+            display: block;
+        }
+
+        /* Danh sách giao dịch */
+        .list-section h2 {
+            font-size: 20px;
+            margin-bottom: 15px;
+            padding-bottom: 8px;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            text-align: left;
+        }
+
+        th, td {
+            padding: 12px 15px;
+            border-bottom: 1px solid #eee;
+        }
+
+        th {
+            background-color: #f1f2f6;
+            color: #57606f;
+        }
+
+        .txt-income { color: var(--primary-color); font-weight: bold; }
+        .txt-expense { color: var(--danger-color); font-weight: bold; }
+
+        .btn-delete {
+            background-color: transparent;
+            color: var(--danger-color);
+            border: 1px solid var(--danger-color);
+            padding: 5px 10px;
+            cursor: pointer;
+            border-radius: 4px;
+            font-size: 12px;
+            transition: all 0.2s;
+        }
+
+        .btn-delete:hover {
+            background-color: var(--danger-color);
+            color: white;
+        }
+
+        @media (max-width: 600px) {
+            .form-row {
+                grid-template-columns: 1fr;
+            }
+        }
     </style>
 </head>
 <body>
 
-<div class="container">
-    <button class="theme-toggle" id="theme-btn">🌙</button>
+<!-- KHUNG ĐĂNG NHẬP -->
+<div class="login-box" id="login-box">
+    <h2>🔐 Đăng Nhập</h2>
+    <div class="login-group">
+        <label for="username">Tài khoản</label>
+        <input type="text" id="username" placeholder="Nhập tài khoản">
+    </div>
+    <div class="login-group">
+        <label for="password">Mật khẩu</label>
+        <input type="password" id="password" placeholder="Nhập mật khẩu">
+    </div>
+    <button class="btn-login" onclick="handleLogin()">Đăng nhập</button>
+    <div class="error-msg" id="error-msg">Tài khoản hoặc mật khẩu không đúng!</div>
+</div>
 
-    <!-- MÀN HÌNH ĐĂNG NHẬP / ĐĂNG KÝ -->
-    <div id="auth-screen" class="screen active">
-        <h2 style="margin-top: 10px; font-size: 20px;">Hệ Thống Đăng Nhập</h2>
-        <input type="text" id="username-auth" placeholder="Tên đăng nhập">
-        <input type="password" id="password-input" placeholder="Mật khẩu (Ít nhất 6 ký tự)">
-        <div class="forgot-link" id="go-forgot-btn">Quên mật khẩu?</div>
-        <button id="login-btn" style="margin-bottom: 8px;">Đăng Nhập</button>
-        <button id="register-btn" style="background: #28a745;">Tạo Tài Khoản Mới</button>
+<!-- KHUNG ỨNG DỤNG CHÍNH -->
+<div class="container" id="main-app">
+    <div class="header-app">
+        <h1>📊 Quản Lý Thu Nhập Ròng</h1>
+        <button class="btn-logout" onclick="handleLogout()">Đăng xuất</button>
     </div>
 
-    <!-- MÀN HÌNH KHÔI PHỤC MẬT KHẨU -->
-    <div id="forgot-screen" class="screen">
-        <h2>Khôi Phục Mật Khẩu</h2>
-        <p style="font-size:12px; opacity: 0.8; margin-bottom: 12px;">Mã OTP đổi mật khẩu sẽ gửi về Telegram Admin.</p>
-        <input type="text" id="forgot-username" placeholder="Nhập tên đăng nhập cần khôi phục">
-        <button id="send-otp-btn">Gửi yêu cầu lấy mã OTP</button>
-        
-        <div id="otp-area" style="display:none; margin-top: 12px; flex-direction: column;">
-            <input type="text" id="otp-input" placeholder="Nhập mã OTP gồm 6 số">
-            <input type="password" id="forgot-new-pwd" placeholder="Mật khẩu mới hoàn toàn">
-            <button id="verify-reset-btn" style="background:#28a745;">Xác Nhận Đổi Mật Khẩu</button>
+    <!-- Bảng điều khiển hiển thị số liệu -->
+    <div class="dashboard">
+        <div class="card income">
+            <h3>Tổng Thu Nhập</h3>
+            <p id="total-income">0đ</p>
         </div>
-        <button id="back-auth-btn" style="background:#6c757d; margin-top:10px;">Quay lại</button>
-    </div>
-
-    <!-- MÀN HÌNH CHÍNH: QUẢN LÝ & THUÊ DỊCH VỤ -->
-    <div id="main-screen" class="screen">
-        <div id="user-info">
-            <div class="user-meta">
-                <div>Hi: <strong><span id="current-username">...</span></strong><span id="my-badge"></span></div>
-                <button id="logout-btn" style="padding: 4px 8px; background:#6c757d; font-size:11px; border-radius: 5px;">Đăng xuất</button>
-            </div>
-            <div class="user-meta">
-                <div>Ví: <span class="balance-badge" id="current-balance">0đ</span> 
-                    <button id="self-deposit-btn" style="display:none; padding: 2px 6px; background:#ffc107; color:black; font-size:10px; border-radius:4px; margin-left:5px;">➕ Nạp Bản Thân</button>
-                    <button id="customer-deposit-btn" class="deposit-blink-btn" style="display:inline-block;">💳 Nạp Tiền</button>
-                </div>
-                <div id="admin-global-actions" style="display:none;">
-                    <button id="up-acc-pool-btn" style="background:#6f42c1; padding:3px 6px; font-size:11px; display:inline-block;">📦 Up Acc Kho</button>
-                    <button id="admin-autoreply-btn" style="background:#e83e8c; padding:3px 6px; font-size:11px; display:inline-block;">🤖 Cài Auto-Reply Admin</button>
-                </div>
-            </div>
+        <div class="card expense">
+            <h3>Tổng Chi Phí / Thuế</h3>
+            <p id="total-expense">0đ</p>
         </div>
-
-        <div id="delivery-box" style="display:none;" class="result-box"></div>
-
-        <!-- MỤC THUÊ DỊCH VỤ -->
-        <div class="section-label">⚡ Thuê Dịch Vụ Hệ Thống</div>
-        <div class="services-grid">
-            <div class="service-card">
-                <span class="service-title">🔥 Bơm MP</span>
-                <span class="service-price">250.000đ / 1B</span>
-                <button class="rent-btn" data-type="bom_mp" data-price="250000" style="background:#0084ff;">Thuê ngay</button>
-            </div>
-            <div class="service-card">
-                <span class="service-title">🛒 Mua Acc MP</span>
-                <span class="service-price">120.000đ / 1B</span>
-                <button class="rent-btn" data-type="mua_acc" data-price="120000" style="background:#e0a800; color:black;">Mua ngay</button>
-            </div>
-            <div class="service-card">
-                <span class="service-title">🤖 Thuê Xúc Ảo</span>
-                <span class="service-price">Tính Tự Động</span>
-                <button id="open-xuc-ao-form-btn" style="background:#28a745;">Thuê ngay</button>
-            </div>
-        </div>
-
-        <!-- KHUNG ĐIỀN THÔNG TIN XÚC ẢO CÓ UP ẢNH -->
-        <div id="xuc-ao-form-block" class="modal-form">
-            <div style="font-weight: bold; font-size: 13px; text-align: center; border-bottom: 1px solid var(--border-color); padding-bottom: 4px;">Form Đăng Ký Thuê Xúc Ảo</div>
-            <input type="text" id="xa-name" placeholder="Tên cầu thủ cần xúc">
-            <input type="text" id="xa-pos" placeholder="Vị trí (ví dụ: ST, CM...)">
-            <input type="text" id="xa-ovr" placeholder="Chỉ số OVR cơ bản">
-            <input type="text" id="xa-season" placeholder="Mùa thẻ (ví dụ: 24TOTY, LN...)">
-            <input type="number" id="xa-level" placeholder="Mức cộng cần xúc (0 - 15)" value="13">
-            <input type="number" id="xa-price-up" placeholder="Giá thẻ CỘNG hiện tại (đ)">
-            <input type="number" id="xa-price-base" placeholder="Giá thẻ XÁC (+0) hiện tại (đ)">
-            
-            <label style="font-size:11px; font-weight:bold; margin-top:2px; display:block; color:var(--section-title);">📸 Tải ảnh cầu thủ lên (Giúp Admin đối chiếu):</label>
-            <input type="file" id="xa-image" accept="image/*" style="font-size:11px; border:none; padding:3px; background:transparent;">
-            
-            <div style="display: flex; gap: 5px; margin-top:4px;">
-                <button id="submit-xuc-ao-btn" style="flex:1; background:#28a745; padding:6px;">Xác Nhận Đơn</button>
-                <button id="close-xuc-ao-btn" style="background:#6c757d; padding:6px;">Đóng</button>
-            </div>
-        </div>
-        
-        <!-- HỘP THƯ ĐẾN (INBOX CHAT) -->
-        <div class="section-label" style="color: #0084ff;">📩 Hộp Thư Tin Nhắn Mới Nhận</div>
-        <div id="inbox-list" class="list-wrapper" style="max-height: 100px; min-height: 45px; border: 1px dashed #0084ff; padding: 5px; border-radius: 8px; background: rgba(0,132,255,0.05); flex-shrink:0;">
-            <div style="font-size:12px; opacity:0.6; text-align:center; padding-top:8px;">Hộp thư trống. Chưa có tin nhắn đến mới.</div>
-        </div>
-
-        <!-- KHU VỰC THÀNH VIÊN SERVER -->
-        <div class="section-label"><span id="list-title-text">🔍 Danh sách thành viên</span></div>
-        <div style="display: flex; gap: 5px; margin-bottom: 5px; flex-shrink: 0;">
-            <input type="text" id="search-input" placeholder="Tìm tên đối tác trên server..." style="flex:1; margin:0; padding:6px; font-size:12px;">
-            <button id="search-btn" style="padding: 0 10px; font-size:12px;">Tìm</button>
-        </div>
-
-        <div id="user-display-list" class="list-wrapper" style="max-height: 200px;">
-            <div style="font-size:12px; opacity:0.5; text-align:center; padding-top:10px;">Đang tải dữ liệu...</div>
+        <div class="card net">
+            <h3>Thu Nhập Ròng</h3>
+            <p id="net-income">0đ</p>
         </div>
     </div>
 
-    <!-- MÀN HÌNH CHAT -->
-    <div id="chat-screen" class="screen">
-        <div id="chat-header">
-            <span><span id="chat-with-user">...</span><span id="target-badge"></span></span>
-            <button id="back-btn" style="padding: 4px 10px; background: #dc3545; border-radius: 6px; font-size:12px;">Quay lại</button>
+    <!-- Form Thêm Giao Dịch -->
+    <div class="form-section">
+        <div class="form-row">
+            <input type="text" id="desc" placeholder="Tên khoản thu/chi (Ví dụ: Lương, Tiền nhà...)" required>
+            <div>
+                <input type="text" id="amount" placeholder="Số tiền (Ví dụ: 10k, 1.5m)" style="width: 100%; box-sizing: border-box;" required>
+                <small class="input-hint">Mẹo: Gõ "k" cho nghìn, "m" cho triệu</small>
+            </div>
+            <select id="type">
+                <option value="income">Thu Nhập</option>
+                <option value="expense">Chi Phí / Thuế</option>
+            </select>
+            <button class="btn-add" onclick="addTransaction()">Thêm</button>
         </div>
-        <div id="messages"></div>
-        <div id="input-area">
-            <input type="text" id="message-input" placeholder="Nhập tin nhắn..." autocomplete="off">
-            <button id="send-btn">Gửi</button>
-        </div>
+    </div>
+
+    <!-- Danh Sách Lịch Sử -->
+    <div class="list-section">
+        <h2>Lịch sử giao dịch</h2>
+        <table>
+            <thead>
+                <tr>
+                    <th>Nội dung</th>
+                    <th>Loại</th>
+                    <th>Số tiền</th>
+                    <th>Hành động</th>
+                </tr>
+            </thead>
+            <tbody id="transaction-list"></tbody>
+        </table>
     </div>
 </div>
 
-<script type="module">
-  import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
-  import { getDatabase, ref, set, get, child, push, onChildAdded, off, update, onValue } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-database.js";
-
-  const firebaseConfig = {
-    apiKey: "AIzaSyAXV-8RNnPIy3UCjbfcauClF9CLL-ILweA",
-    authDomain: "web-chat-a1237.firebaseapp.com",
-    databaseURL: "https://web-chat-a1237-default-rtdb.firebaseio.com",
-    projectId: "web-chat-a1237",
-    storageBucket: "web-chat-a1237.firebasestorage.app",
-    messagingSenderId: "663405837568",
-    appId: "1:663405837568:web:47076505da3e6943cd47e5"
-  };
-
-  const app = initializeApp(firebaseConfig);
-  const db = getDatabase(app);
-
-  let currentUser = null; 
-  let currentChatRoomId = null;
-  let targetChatName = "";
-  let targetChatUid = "";
-  let chatListener = null;
-  let generatedOTP = null;
-  let otpTargetUser = "";
-  let balanceListener = null;
-  let globalInboxListener = null;
-
-  const TELEGRAM_TOKEN = "8503723223:AAF8FonAHhyHUz7vKmy-7K7sBPqYJUJlCwo";
-  const TELEGRAM_CHAT_ID = "-1003941908120";
-  const ADMIN_USERNAME = "gbao08";
-  const ADMIN_TELEGRAM_LINK = "https://t.me/gbao291208";
-
-  function sendTelegramAlert(text) {
-      const url = `https://api.telegram.org/bot${TELEGRAM_TOKEN}/sendMessage?chat_id=${TELEGRAM_CHAT_ID}&text=${encodeURIComponent(text)}`;
-      fetch(url).catch(err => console.error(err));
-  }
-
-  function sendTelegramPhotoBase64(base64String, captionText) {
-      const block = base64String.split(';');
-      const contentType = block[0].split(":")[1];
-      const realData = block[1].split(",")[1];
-
-      const blob = b64toBlob(realData, contentType);
-      const formData = new FormData();
-      formData.append("chat_id", TELEGRAM_CHAT_ID);
-      formData.append("photo", blob, "player_photo.png");
-      formData.append("caption", formData);
-
-      fetch(`https://api.telegram.org/bot${TELEGRAM_TOKEN}/sendPhoto`, {
-          method: "POST",
-          body: formData
-      }).catch(err => console.error(err));
-  }
-
-  function b64toBlob(b64Data, contentType='', sliceSize=512) {
-      const byteCharacters = atob(b64Data);
-      const byteArrays = [];
-      for (let offset = 0; offset < byteCharacters.length; offset += sliceSize) {
-          const slice = byteCharacters.slice(offset, offset + sliceSize);
-          const byteNumbers = new Array(slice.length);
-          for (let i = 0; i < slice.length; i++) {
-              byteNumbers[i] = slice.charCodeAt(i);
-          }
-          const byteArray = new Uint8Array(byteNumbers);
-          byteArrays.push(byteArray);
-      }
-      return new Blob(byteArrays, {type: contentType});
-  }
-
-  function showScreen(screenId) {
-      document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
-      document.getElementById(screenId).classList.add('active');
-  }
-
-  // --- DARK MODE ---
-  const themeBtn = document.getElementById('theme-btn');
-  themeBtn.addEventListener('click', () => {
-      if (document.body.getAttribute('data-theme') === 'dark') {
-          document.body.removeAttribute('data-theme');
-          themeBtn.innerText = '🌙';
-      } else {
-          document.body.setAttribute('data-theme', 'dark');
-          themeBtn.innerText = '☀️';
-      }
-  });
-
-  // --- TIN NHÂN TỰ ĐỘNG ---
-  function checkAutoReply(targetUid) {
-      get(child(ref(db), `users/${targetUid}`)).then((snap) => {
-          if (snap.exists() && snap.val().autoReply) {
-              const replyText = snap.val().autoReply;
-              setTimeout(() => {
-                  push(ref(db, 'rooms/' + currentChatRoomId), {
-                      senderId: targetUid,
-                      text: `🤖 [Tự động]: ${replyText}`,
-                      timestamp: Date.now()
-                  });
-              }, 800);
-          }
-      });
-  }
-
-  // --- ĐĂNG KÝ / ĐĂNG NHẬP ---
-  document.getElementById('register-btn').addEventListener('click', () => {
-      const username = document.getElementById('username-auth').value.trim();
-      const password = document.getElementById('password-input').value;
-
-      if(!username || !password) return alert('Hãy nhập tên và mật khẩu!');
-      if(username.toLowerCase() === ADMIN_USERNAME) return alert('Tên này đã được hệ thống bảo vệ!');
-
-      const cleanKey = username.replace(/[.#$/\[\]]/g, "_");
-      get(child(ref(db), `users/${cleanKey}`)).then((snap) => {
-          if (snap.exists()) return alert('Tên đăng nhập đã tồn tại!');
-          
-          set(ref(db, 'users/' + cleanKey), { 
-              username: username, 
-              password: password, 
-              role: 'user', 
-              isBanned: false,
-              balance: 0 
-          });
-          alert('Đăng ký thành công!');
-      });
-  });
-
-  document.getElementById('login-btn').addEventListener('click', () => {
-      const username = document.getElementById('username-auth').value.trim();
-      const password = document.getElementById('password-input').value;
-      if(!username || !password) return alert('Vui lòng nhập đủ thông tin!');
-
-      if (username === ADMIN_USERNAME && password === "Gbao0088!?") {
-          get(child(ref(db), `users/${ADMIN_USERNAME}`)).then((s) => {
-              if(!s.exists()) {
-                  set(ref(db, 'users/' + ADMIN_USERNAME), { username: ADMIN_USERNAME, password: "Gbao0088!?", role: 'admin', balance: 999999999 });
-              }
-          });
-      }
-
-      const cleanKey = username.replace(/[.#$/\[\]]/g, "_");
-      get(child(ref(db), `users/${cleanKey}`)).then((snap) => {
-          if (snap.exists() && snap.val().password === password) {
-              const uData = snap.val();
-              currentUser = { uid: cleanKey, username: uData.username, role: uData.role || 'user' };
-              document.getElementById('current-username').innerText = currentUser.username;
-              
-              if (currentUser.role === 'admin') {
-                  document.getElementById('my-badge').innerHTML = " <span class='admin-badge'>★ Admin VIP</span>";
-                  document.getElementById('admin-global-actions').style.display = 'block';
-                  document.getElementById('self-deposit-btn').style.display = 'inline-block';
-                  document.getElementById('customer-deposit-btn').style.display = 'none';
-                  document.getElementById('list-title-text').innerText = "👑 TOÀN BỘ THÀNH VIÊN TRÊN SERVER";
-              } else if (currentUser.role === 'mod') {
-                  document.getElementById('my-badge').innerHTML = " <span class='mod-badge'>[QTV]</span>";
-                  document.getElementById('admin-global-actions').style.display = 'block';
-                  document.getElementById('self-deposit-btn').style.display = 'inline-block';
-                  document.getElementById('customer-deposit-btn').style.display = 'none';
-                  document.getElementById('list-title-text').innerText = "👑 TOÀN BỘ THÀNH VIÊN TRÊN SERVER";
-              } else {
-                  document.getElementById('my-badge').innerHTML = "";
-                  document.getElementById('admin-global-actions').style.display = 'none';
-                  document.getElementById('self-deposit-btn').style.display = 'none';
-                  document.getElementById('customer-deposit-btn').style.display = 'inline-block';
-                  document.getElementById('list-title-text').innerText = "🔍 Tìm kiếm đối tác";
-              }
-              
-              if(balanceListener) off(ref(db, `users/${currentUser.uid}/balance`));
-              balanceListener = onValue(ref(db, `users/${currentUser.uid}/balance`), (bSnap) => {
-                  const bal = bSnap.val() || 0;
-                  document.getElementById('current-balance').innerText = bal.toLocaleString('vi-VN') + 'đ';
-                  currentUser.balance = bal;
-              });
-
-              loadUsersDisplay(); 
-              listenGlobalInbox();
-              showScreen('main-screen');
-          } else {
-              alert('Sai thông tin tài khoản hoặc mật khẩu!');
-          }
-      });
-  });
-
-  document.getElementById('logout-btn').addEventListener('click', () => { 
-      if(balanceListener) off(ref(db, `users/${currentUser.uid}/balance`));
-      if(globalInboxListener) off(ref(db, 'rooms'));
-      currentUser = null; 
-      showScreen('auth-screen'); 
-  });
-
-  // --- THEO DÕI HỘP THƯ ĐẾN ---
-  function listenGlobalInbox() {
-      const inboxList = document.getElementById('inbox-list');
-      if(globalInboxListener) off(ref(db, 'rooms'));
-      
-      globalInboxListener = onValue(ref(db, 'rooms'), (snapshot) => {
-          if (!currentUser) return;
-          if (!snapshot.exists()) {
-              inboxList.innerHTML = '<div style="font-size:12px; opacity:0.6; text-align:center; padding-top:8px;">Hộp thư trống. Chưa có tin nhắn đến mới.</div>';
-              return;
-          }
-
-          const rooms = snapshot.val();
-          let incomingMessages = [];
-
-          for (let roomId in rooms) {
-              if (roomId.includes(currentUser.uid)) {
-                  const chatData = rooms[roomId];
-                  const messagesArray = Object.values(chatData);
-                  if (messagesArray.length === 0) continue;
-
-                  const lastMsg = messagesArray[messagesArray.length - 1];
-                  
-                  if (lastMsg.senderId !== currentUser.uid) {
-                      incomingMessages.push({
-                          roomId: roomId,
-                          senderId: lastMsg.senderId,
-                          text: lastMsg.text,
-                          timestamp: lastMsg.timestamp
-                      });
-                  }
-              }
-          }
-
-          incomingMessages.sort((a,b) => b.timestamp - a.timestamp);
-
-          if (incomingMessages.length === 0) {
-              inboxList.innerHTML = '<div style="font-size:12px; opacity:0.6; text-align:center; padding-top:8px;">Hộp thư trống. Chưa có tin nhắn đến mới.</div>';
-          } else {
-              inboxList.innerHTML = '';
-              get(child(ref(db), 'users')).then((uSnap) => {
-                  const allUsers = uSnap.val() || {};
-                  incomingMessages.forEach(item => {
-                      const senderName = allUsers[item.senderId] ? allUsers[item.senderId].username : "Người dùng ẩn";
-                      
-                      const box = document.createElement('div');
-                      box.classList.add('inbox-item');
-                      box.innerHTML = `
-                          <div>📩 <b>${senderName}</b>: <span style="font-style: italic; opacity:0.9;">"${item.text.substring(0, 20)}${item.text.length > 20 ? '...' : ''}"</span></div>
-                          <button style="padding:4px 8px; font-size:11px; background:#28a745;" class="open-inbox-btn">Xem ngay</button>
-                      `;
-                      box.querySelector('.open-inbox-btn').addEventListener('click', () => {
-                          startChat(item.senderId, senderName);
-                      });
-                      inboxList.appendChild(box);
-                  });
-              });
-          }
-      });
-  }
-
-  // --- HIỂN THỊ DANH SÁCH THÀNH VIÊN ---
-  function loadUsersDisplay(keyword = "") {
-      const container = document.getElementById('user-display-list');
-      container.innerHTML = '<div style="font-size:12px; opacity:0.5; text-align:center; padding-top:10px;">Đang tải danh sách...</div>';
-
-      get(child(ref(db), 'users')).then((snap) => {
-          if (!snap.exists()) {
-              container.innerHTML = '<div style="font-size:12px; opacity:0.5; text-align:center; padding-top:10px;">Không có thành viên nào.</div>';
-              return;
-          }
-
-          const users = snap.val();
-          container.innerHTML = '';
-          let count = 0;
-
-          for (let uid in users) {
-              if (uid === currentUser.uid) continue;
-
-              const uData = users[uid];
-              const matchesKeyword = uData.username.toLowerCase().includes(keyword.toLowerCase());
-
-              if ((currentUser.role === 'admin' || currentUser.role === 'mod') || (keyword && matchesKeyword)) {
-                  if (!keyword || matchesKeyword) {
-                      renderUserRow(uid, uData, container);
-                      count++;
-                  }
-              }
-          }
-
-          if (count === 0) {
-              if (currentUser.role === 'admin' || currentUser.role === 'mod') {
-                  container.innerHTML = '<div style="font-size:12px; opacity:0.5; text-align:center; padding-top:10px;">Không tìm thấy thành viên trùng khớp.</div>';
-              } else {
-                  container.innerHTML = '<div style="font-size:12px; opacity:0.5; text-align:center; padding-top:10px;">Gõ tên chính xác đối tác ở thanh tìm kiếm và bấm "Tìm".</div>';
-              }
-          }
-      });
-  }
-
-  document.getElementById('search-btn').addEventListener('click', () => {
-      const keyword = document.getElementById('search-input').value.trim();
-      loadUsersDisplay(keyword);
-  });
-
-  // --- GIAO DIỆN FORM XÚC ẢO ---
-  document.getElementById('open-xuc-ao-form-btn').addEventListener('click', () => {
-      document.getElementById('xuc-ao-form-block').style.display = 'flex';
-  });
-  document.getElementById('close-xuc-ao-btn').addEventListener('click', () => {
-      document.getElementById('xuc-ao-form-block').style.display = 'none';
-  });
-
-  // --- XỬ LÝ ĐƠN HÀNG THUÊ XÚC ẢO CÓ ẢNH ---
-  document.getElementById('submit-xuc-ao-btn').addEventListener('click', () => {
-      if(!currentUser) return;
-
-      const pName = document.getElementById('xa-name').value.trim();
-      const pPos = document.getElementById('xa-pos').value.trim();
-      const pOvr = document.getElementById('xa-ovr').value.trim();
-      const pSeason = document.getElementById('xa-season').value.trim();
-      const pLevel = parseInt(document.getElementById('xa-level').value);
-      const priceUpgrade = parseFloat(document.getElementById('xa-price-up').value);
-      const priceBase = parseFloat(document.getElementById('xa-price-base').value);
-      const fileInput = document.getElementById('xa-image');
-
-      if (!pName || !pPos || !pOvr || !pSeason || isNaN(pLevel) || isNaN(priceUpgrade) || isNaN(priceBase)) {
-          return alert("Vui lòng điền đầy đủ tất cả dữ liệu báo giá cầu thủ!");
-      }
-      if (priceUpgrade < priceBase) return alert("Lỗi: Giá thẻ cộng phải lớn hơn hoặc bằng giá thẻ xác!");
-
-      // Đã cập nhật tỷ lệ tính phí từ 10% (0.1) lên 25% (0.25) theo yêu cầu
-      const calculatedFee = (priceUpgrade - priceBase) * 0.25;
-
-      if (currentUser.balance < calculatedFee) {
-          return alert(`Thao tác thất bại! Số dư không đủ. Bạn cần ${calculatedFee.toLocaleString('vi-VN')}đ.`);
-      }
-
-      const confirmRent = confirm(`Xác nhận Thuê Xúc Ảo cầu thủ: ${pName}\nTổng phí trừ ví: ${calculatedFee.toLocaleString('vi-VN')}đ?`);
-      if (!confirmRent) return;
-
-      const finishOrderSubmit = (base64Image) => {
-          const newBalance = currentUser.balance - calculatedFee;
-          update(ref(db, `users/${currentUser.uid}`), { balance: newBalance }).then(() => {
-              alert(`🎉 Thuê Xúc Ảo thành công! Đã trừ ${calculatedFee.toLocaleString('vi-VN')}đ vào ví.`);
-              document.getElementById('xuc-ao-form-block').style.display = 'none';
-
-              const tgCaption = `🤖 [ĐƠN THUÊ XÚC ẢO MỚI]\n👤 Khách hàng: ${currentUser.username}\n🆔 ID Ví: ${currentUser.uid}\n\n📋 THÔNG TIN CẦU THỦ:\n🏃 Tên: ${pName}\n📌 Vị trí: ${pPos} | OVR: ${pOvr}\n✨ Mùa thẻ: ${pSeason}\n➕ Mức cộng: +${pLevel}\n\n💵 CHI TIẾT GIÁ:\n🔸 Giá thẻ cộng: ${priceUpgrade.toLocaleString('vi-VN')}đ\n🔸 Giá thẻ xác: ${priceBase.toLocaleString('vi-VN')}đ\n💸 SỐ TIỀN ĐÃ TRỪ VÍ: ${calculatedFee.toLocaleString('vi-VN')}đ\n📊 Trạng thái: Đã thanh toán - Chờ setup!`;
-              
-              if (base64Image) {
-                  sendTelegramPhotoBase64(base64Image, tgCaption);
-              } else {
-                  sendTelegramAlert(tgCaption + "\n⚠️ (Khách hàng không đính kèm ảnh)");
-              }
-          });
-      };
-
-      if (fileInput.files && fileInput.files[0]) {
-          const reader = new FileReader();
-          reader.onload = function(e) {
-              finishOrderSubmit(e.target.result);
-          };
-          reader.readAsDataURL(fileInput.files[0]);
-      } else {
-          finishOrderSubmit(null);
-      }
-  });
-
-  // --- KHÁCH HÀNG BẤM NẠP TIỀN ---
-  document.getElementById('customer-deposit-btn').addEventListener('click', () => {
-      if(!currentUser) return;
-      const amountInput = prompt("Nhập số tiền bạn muốn nạp vào hệ thống (đ):", "50000");
-      if (amountInput === null) return;
-      const amount = parseInt(amountInput);
-      if (isNaN(amount) || amount <= 0) return alert("Số tiền nhập vào không hợp lệ!");
-      
-      sendTelegramAlert(`💸 [YÊU CẦU NẠP TIỀN MỚI]\n👤 Tài khoản khách: ${currentUser.username}\n🆔 ID Hệ thống: ${currentUser.uid}\n💰 Số tiền muốn nạp: ${amount.toLocaleString('vi-VN')}đ\n📢 Trạng thái: Đang kết nối sang Telegram Admin.`);
-      alert(`Đã ghi nhận yêu cầu nạp ${amount.toLocaleString('vi-VN')}đ! Đang chuyển hướng bạn sang Telegram Admin.`);
-      window.open(ADMIN_TELEGRAM_LINK, '_blank');
-  });
-
-  // --- TỰ NẠP BẢN THÂN (ADMIN / QTV) ---
-  document.getElementById('self-deposit-btn').addEventListener('click', () => {
-      if(!currentUser) return;
-      const amountInput = prompt("Nhập số tiền bạn muốn tự cộng vào tài khoản của mình:", "50000");
-      if(amountInput !== null && !isNaN(parseInt(amountInput))) {
-          const addAmount = parseInt(amountInput);
-          const currentBal = currentUser.balance || 0;
-          const newBal = currentBal + addAmount;
-          update(ref(db, `users/${currentUser.uid}`), { balance: newBal }).then(() => {
-              alert(`Đã tự nạp thành công +${addAmount.toLocaleString('vi-VN')}đ!`);
-              sendTelegramAlert(`💰 [CẤP CAO TỰ NẠP TIỀN]\n👤 Người nạp: ${currentUser.username} (${currentUser.role.toUpperCase()})\n➕ Số tiền thêm: ${addAmount.toLocaleString('vi-VN')}đ\n📈 Số dư hiện tại: ${newBal.toLocaleString('vi-VN')}đ`);
-          });
-      }
-  });
-
-  // --- CÀI ĐẶT AUTO REPLY (ADMIN) ---
-  document.getElementById('admin-autoreply-btn').addEventListener('click', () => {
-      if(!currentUser) return;
-      get(child(ref(db), `users/${currentUser.uid}`)).then((snap) => {
-          const currentReply = (snap.exists() && snap.val().autoReply) ? snap.val().autoReply : "";
-          const text = prompt(`[Cài đặt Auto-Reply Admin/QTV] Nhập nội dung tự động phản hồi khi có người nhắn tin tới:`, currentReply);
-          if(text !== null) {
-              update(ref(db, `users/${currentUser.uid}`), { autoReply: text.trim() ? text.trim() : null }).then(() => {
-                  alert(text.trim() ? "🎉 Đã bật Auto-reply!" : "🚫 Đã tắt tính năng Auto-reply.");
-              });
-          }
-      });
-  });
-
-  // --- XỬ LÝ THUÊ DỊCH VỤ (BƠM MP & MUA ACC) ---
-  document.querySelectorAll('.rent-btn').forEach(btn => {
-      btn.addEventListener('click', (e) => {
-          const type = e.target.getAttribute('data-type');
-          const unitPrice = parseInt(e.target.getAttribute('data-price'));
-          const typeName = type === 'bom_mp' ? "Bơm MP" : "Mua Acc MP";
-
-          const qtyInput = prompt(`Nhập số lượng B bạn muốn mua/thuê cho [${typeName}]:`, "1");
-          if (!qtyInput) return;
-          const qty = parseInt(qtyInput);
-          if (isNaN(qty) || qty <= 0) return alert("Số lượng không hợp lệ!");
-
-          const totalPrice = unitPrice * qty;
-          if (currentUser.balance < totalPrice) {
-              return alert(`Số dư không đủ! Chi phí là ${totalPrice.toLocaleString('vi-VN')}đ.`);
-          }
-
-          const confirmRent = confirm(`Xác nhận dùng dịch vụ: ${typeName} số lượng ${qty}B.\nTổng trừ ví: ${totalPrice.toLocaleString('vi-VN')}đ?`);
-          if (!confirmRent) return;
-
-          const newBalance = currentUser.balance - totalPrice;
-          
-          if (type === 'bom_mp') {
-              update(ref(db, `users/${currentUser.uid}`), { balance: newBalance }).then(() => {
-                  alert("Đăng ký thuê dịch vụ Bơm MP thành công!");
-                  sendTelegramAlert(`⚡ [ĐƠN HÀNG THUÊ DỊCH VỤ]\n👤 Khách hàng: ${currentUser.username}\n🛠 Loại dịch vụ: Bơm MP\n🔢 Số lượng: ${qty}B\n💰 Tổng tiền: ${totalPrice.toLocaleString('vi-VN')}đ`);
-              });
-          } 
-          else if (type === 'mua_acc') {
-              get(child(ref(db), 'accounts_pool')).then((poolSnap) => {
-                  let accountKeyFound = null;
-                  let accountDataFound = null;
-
-                  if (poolSnap.exists()) {
-                      const allPool = poolSnap.val();
-                      for (let key in allPool) {
-                          if (allPool[key] && allPool[key].status === 'available') {
-                              accountKeyFound = key;
-                              accountDataFound = allPool[key];
-                              break; 
-                          }
-                      }
-                  }
-
-                  if (accountKeyFound && accountDataFound) {
-                      update(ref(db, `users/${currentUser.uid}`), { balance: newBalance }).then(() => {
-                          update(ref(db, `accounts_pool/${accountKeyFound}`), { status: 'sold', buyer: currentUser.username });
-                          const delBox = document.getElementById('delivery-box');
-                          delBox.innerHTML = `🎉 MUA ACC THÀNH CÔNG!<br>🔐 Tài khoản: ${accountDataFound.acc_user}<br>🔑 Mật khẩu: ${accountDataFound.acc_pass}`;
-                          delBox.style.display = 'block';
-                          alert("Mua tài khoản thành công!");
-                          sendTelegramAlert(`🛒 [XUẤT ACC TỰ ĐỘNG THÀNH CÔNG]\n👤 Người mua: ${currentUser.username}\n💰 Giá: ${totalPrice.toLocaleString('vi-VN')}đ\n📦 Tài khoản: ${accountDataFound.acc_user}`);
-                      });
-                  } else {
-                      alert("⚠️ THÔNG BÁO: Hiện tại kho tài khoản đã hết hàng! Hệ thống đã gửi báo động đến Admin bổ sung khẩn cấp!");
-                      sendTelegramAlert(`🚨 [HẾT HÀNG ACC MUA] Khách ${currentUser.username} mua nhưng kho rỗng!`);
-                  }
-              });
-          }
-      });
-  });
-
-  // --- ADMIN/QTV UP ACC VÀO KHO HÀNG ---
-  document.getElementById('up-acc-pool-btn').addEventListener('click', () => {
-      const accUser = prompt("Nhập Tên tài khoản cần bổ sung:");
-      if (!accUser || accUser.trim() === "") return;
-      const accPass = prompt("Nhập Mật khẩu của tài khoản:");
-      if (!accPass || accPass.trim() === "") return;
-
-      const newAccRef = push(ref(db, 'accounts_pool'));
-      set(newAccRef, {
-          acc_user: accUser.trim(),
-          acc_pass: accPass.trim(),
-          status: 'available',
-          timestamp: Date.now()
-      }).then(() => { alert("Đã tải tài khoản lên kho thành công!"); });
-  });
-
-  // --- KHÔI PHỤC MẬT KHẨU VÀ OTP ---
-  document.getElementById('go-forgot-btn').addEventListener('click', () => { showScreen('forgot-screen'); });
-  document.getElementById('back-auth-btn').addEventListener('click', () => { showScreen('auth-screen'); });
-
-  document.getElementById('send-otp-btn').addEventListener('click', () => {
-      const username = document.getElementById('forgot-username').value.trim();
-      if(!username) return alert('Vui lòng điền tên đăng nhập!');
-      const cleanKey = username.replace(/[.#$/\[\]]/g, "_");
-
-      get(child(ref(db), `users/${cleanKey}`)).then((snap) => {
-          if (!snap.exists()) return alert('Tài khoản không tồn tại!');
-          generatedOTP = Math.floor(100000 + Math.random() * 900000).toString();
-          otpTargetUser = cleanKey;
-          sendTelegramAlert(`🔑 [MÃ KHÔI PHỤC MK]\n👤 Tài khoản: ${username}\n🔢 Mã OTP: ${generatedOTP}`);
-          alert('Đã gửi yêu cầu cấp mã lên Telegram Admin thành công!');
-          document.getElementById('otp-area').style.display = 'flex';
-      });
-  });
-
-  document.getElementById('verify-reset-btn').addEventListener('click', () => {
-      const userOtp = document.getElementById('otp-input').value.trim();
-      const newPwd = document.getElementById('forgot-new-pwd').value;
-      if (userOtp !== generatedOTP) return alert('Mã OTP sai!');
-      if (newPwd.length < 6) return alert('Mật khẩu tối thiểu 6 ký tự!');
-
-      update(ref(db, `users/${otpTargetUser}`), { password: newPwd });
-      alert('Đổi mật khẩu thành công!');
-      showScreen('auth-screen');
-  });
-
-  // --- RENDERING DÒNG THÀNH VIÊN VÀ QUYỀN QUẢN TRỊ ---
-  function renderUserRow(uid, userData, container) {
-      const isTargetAdmin = userData.role === 'admin';
-      const isTargetMod = userData.role === 'mod';
-      const isBanned = userData.isBanned || false;
-      const uBalance = userData.balance || 0;
-      const item = document.createElement('div');
-      item.classList.add('user-item');
-
-      let roleBadge = "";
-      if (isTargetAdmin) roleBadge = "<span class='admin-badge'>★</span>";
-      else if (isTargetMod) roleBadge = "<span class='mod-badge'>[QTV]</span>";
-
-      let html = `
-        <div class="user-row">
-            <span><strong>${userData.username}</strong> ${roleBadge} [<span style="color:#28a745;font-weight:bold;">${uBalance.toLocaleString('vi-VN')}đ</span>] ${isBanned ? '❌' : ''}</span>
-            <div class="actions-row">
-                <button class="start-chat-btn" data-uid="${uid}" style="background:#0084ff;" data-name="${userData.username}">Nhắn tin</button>
-            </div>
-        </div>
-      `;
-
-      if (currentUser.role === 'admin' || currentUser.role === 'mod') {
-          html += `<div class="admin-tools"><span>🔧 Quản trị:</span>`;
-          html += `
-            <button style="background:#28a745;" class="money-btn">💵 Tiền ví</button>
-            <button style="background:#20c997; color:white;" class="change-username-btn">✏️ Đổi Tên DN</button>
-            <button style="background:#dc3545;" class="ban-btn">${isBanned ? 'Mở Khóa' : 'Khóa TK'}</button>
-            <button style="background:#ffc107; color:black;" class="pwd-btn">Đổi MK</button>
-            <button style="background:#17a2b8;" class="autorep-btn">Auto-rep</button>
-            <button style="background:#7d0000; color:white;" class="delete-user-btn">🗑️ Xóa</button>
-          `;
-          if (currentUser.role === 'admin') {
-              html += `<button style="background:#bc5100;" class="role-btn">${isTargetMod ? 'Hạ cấp' : 'Lên QTV'}</button>`;
-          }
-          html += `</div>`;
-      }
-      
-      item.innerHTML = html;
-      container.appendChild(item);
-
-      item.querySelector('.start-chat-btn').addEventListener('click', () => startChat(uid, userData.username));
-      
-      if (currentUser.role === 'admin' || currentUser.role === 'mod') {
-          // Tính năng Đổi tên đăng nhập (Username) cho khách
-          item.querySelector('.change-username-btn').addEventListener('click', () => {
-              const newUsernameInput = prompt(`Nhập TÊN ĐĂNG NHẬP MỚI bạn muốn đặt cho khách [${userData.username}]:`);
-              if (!newUsernameInput || newUsernameInput.trim() === "") return;
-              
-              const newUsername = newUsernameInput.trim();
-              if (newUsername.toLowerCase() === ADMIN_USERNAME) return alert("Không được sử dụng tên Admin hệ thống!");
-              
-              const newCleanKey = newUsername.replace(/[.#$/\[\]]/g, "_");
-              
-              // Kiểm tra xem tên đăng nhập mới đã có người dùng chưa
-              get(child(ref(db), `users/${newCleanKey}`)).then((checkSnap) => {
-                  if (checkSnap.exists()) return alert("Lỗi: Tên đăng nhập mới này đã tồn tại trên server!");
-                  
-                  const updateData = {
-                      username: newUsername,
-                      password: userData.password,
-                      balance: userData.balance || 0,
-                      role: userData.role || 'user',
-                      isBanned: userData.isBanned || false
-                  };
-                  if (userData.autoReply) updateData.autoReply = userData.autoReply;
-                  
-                  // Ghi đè thông tin sang khóa tên mới và xóa tài khoản ở khóa tên cũ
-                  set(ref(db, `users/${newCleanKey}`), updateData).then(() => {
-                      set(ref(db, `users/${uid}`), null).then(() => {
-                          alert(`Đã đổi tên đăng nhập thành công từ [${userData.username}] thành [${newUsername}]!`);
-                          loadUsersDisplay(document.getElementById('search-input').value);
-                          sendTelegramAlert(`✏️ [ĐỔI TÊN ĐĂNG NHẬP THÀNH VIÊN]\n👮 Người thực hiện: ${currentUser.username} (${currentUser.role.toUpperCase()})\n🔄 Cũ: ${userData.username}\n➡️ Mới: ${newUsername}\n📌 Trạng thái: Đã cập nhật & đồng bộ dữ liệu ví thành công.`);
-                      });
-                  });
-              });
-          });
-
-          item.querySelector('.money-btn').addEventListener('click', () => {
-              const inputTien = prompt(`Nhập số tiền muốn thay đổi ví cho [${userData.username}]:\n(Gõ số dương để CỘNG, gõ số âm để TRỪ)`, "0");
-              if(inputTien !== null && !isNaN(parseInt(inputTien))) {
-                  const valueChange = parseInt(inputTien);
-                  const newBalance = uBalance + valueChange;
-                  if (newBalance < 0) return alert("Số dư sau khi trừ không thể nhỏ hơn 0đ!");
-
-                  update(ref(db, `users/${uid}`), { balance: newBalance }).then(() => {
-                      alert(`Xử lý số dư ví thành công!`);
-                      loadUsersDisplay(document.getElementById('search-input').value);
-                      sendTelegramAlert(`💵 [BIẾN ĐỘNG VÍ THÀNH VIÊN]\n👮 Người thực hiện: ${currentUser.username} (${currentUser.role.toUpperCase()})\n👤 Khách hàng: ${userData.username}\n🔄 Biến động: ${valueChange >= 0 ? '+' : ''}${valueChange.toLocaleString('vi-VN')}đ\n💰 Số dư cuối: ${newBalance.toLocaleString('vi-VN')}đ`);
-                  });
-              }
-          });
-
-          item.querySelector('.ban-btn').addEventListener('click', () => {
-              update(ref(db, `users/${uid}`), { isBanned: !isBanned }).then(() => {
-                  loadUsersDisplay(document.getElementById('search-input').value);
-              });
-          });
-          item.querySelector('.pwd-btn').addEventListener('click', () => {
-              const newP = prompt(`Thay đổi mật khẩu mới cho [${userData.username}]:`);
-              if(newP) update(ref(db, `users/${uid}`), { password: newP }).then(() => alert("Đã đổi mật khẩu!"));
-          });
-          
-          item.querySelector('.autorep-btn').addEventListener('click', () => {
-              const text = prompt(`Nhập nội dung tự động trả lời khi có ai chat với [${userData.username}]:`);
-              update(ref(db, `users/${uid}`), { autoReply: text ? text.trim() : null }).then(() => alert("Đã cập nhật Auto-reply!"));
-          });
-          
-          item.querySelector('.delete-user-btn').addEventListener('click', () => {
-              const xacNhanXoa = confirm(`⚠️ Bạn có chắc chắn muốn XÓA HOÀN TOÀN tài khoản [${userData.username}]?`);
-              if(xacNhanXoa) {
-                  set(ref(db, `users/${uid}`), null).then(() => {
-                      alert(`Đã xóa vĩnh viễn tài khoản.`);
-                      loadUsersDisplay(document.getElementById('search-input').value);
-                      sendTelegramAlert(`🗑️ [HỆ THỐNG XÓA TÀI KHOẢN]\n👮 Người thực hiện: ${currentUser.username}\n❌ Tài khoản bị xóa: ${userData.username}`);
-                  });
-              }
-          });
-
-          if(currentUser.role === 'admin') {
-              item.querySelector('.role-btn').addEventListener('click', () => {
-                  const targetRole = isTargetMod ? 'user' : 'mod';
-                  update(ref(db, `users/${uid}`), { role: targetRole }).then(() => {
-                      loadUsersDisplay(document.getElementById('search-input').value);
-                  });
-              });
-          }
-      }
-  }
-
-  // --- PHÒNG CHAT ---
-  function startChat(targetUid, targetName) {
-      get(child(ref(db), `users/${currentUser.uid}`)).then((snap) => {
-          if (snap.exists() && snap.val().isBanned === true) return alert("Bạn đang bị khóa tài khoản!");
-
-          targetChatUid = targetUid;
-          targetChatName = targetName;
-          document.getElementById('chat-with-user').innerText = "Đang chat với: " + targetName;
-          document.getElementById('messages').innerHTML = '';
-          document.getElementById('target-badge').innerHTML = (targetName === ADMIN_USERNAME) ? " <span class='admin-badge'>★</span>" : "";
-
-          currentChatRoomId = currentUser.uid < targetUid ? `${currentUser.uid}_${targetUid}` : `${targetUid}_${currentUser.uid}`;
-          showScreen('chat-screen');
-
-          const roomRef = ref(db, 'rooms/' + currentChatRoomId);
-          chatListener = onChildAdded(roomRef, (data) => {
-              const msg = data.val();
-              const msgEl = document.createElement('div');
-              msgEl.classList.add('message', msg.senderId === currentUser.uid ? 'mine' : 'theirs');
-              msgEl.innerText = msg.text;
-              document.getElementById('messages').appendChild(msgEl);
-              const div = document.getElementById('messages');
-              div.scrollTop = div.scrollHeight;
-          });
-      });
-  }
-
-  // --- GỬI TIN NHẮN CHAT ---
-  function sendDirectMessage() {
-      const input = document.getElementById('message-input');
-      const text = input.value.trim();
-      if (!text || !currentChatRoomId) return;
-
-      get(child(ref(db), `users/${currentUser.uid}`)).then((snap) => {
-          if (snap.exists() && snap.val().isBanned === true) return alert("Bạn bị chặn gửi tin nhắn!");
-
-          push(ref(db, 'rooms/' + currentChatRoomId), {
-              senderId: currentUser.uid,
-              text: text,
-              timestamp: Date.now()
-          });
-          
-          if (currentUser.username !== ADMIN_USERNAME && targetChatName === ADMIN_USERNAME) {
-              sendTelegramAlert(`💬 [TIN NHẮN ĐẾN ADMIN]\n👤 Từ: ${currentUser.username}\n📝 Nội dung: ${text}`);
-          }
-          
-          checkAutoReply(targetChatUid);
-          input.value = '';
-      });
-  }
-
-  document.getElementById('send-btn').addEventListener('click', sendDirectMessage);
-  document.getElementById('message-input').addEventListener('keypress', (e) => { if(e.key === 'Enter') sendDirectMessage(); });
-
-  document.getElementById('back-btn').addEventListener('click', () => {
-      if (currentChatRoomId && chatListener) { off(ref(db, 'rooms/' + currentChatRoomId)); }
-      loadUsersDisplay(document.getElementById('search-input').value);
-      showScreen('main-screen');
-  });
+<script>
+    // Kiểm tra trạng thái đăng nhập khi tải trang
+    window.onload = function() {
+        const isLoggedIn = localStorage.getItem('isLoggedIn');
+        if (isLoggedIn === 'true') {
+            showApp();
+        } else {
+            showLogin();
+        }
+    };
+
+    // Hàm xử lý Đăng nhập
+    function handleLogin() {
+        const userInp = document.getElementById('username').value.trim();
+        const passInp = document.getElementById('password').value.trim();
+        const errorMsg = document.getElementById('error-msg');
+
+        // Tài khoản mặc định theo yêu cầu
+        if (userInp === 'gbao08' && passInp === '1') {
+            localStorage.setItem('isLoggedIn', 'true');
+            errorMsg.style.display = 'none';
+            showApp();
+        } else {
+            errorMsg.style.display = 'block';
+        }
+    }
+
+    // Hàm xử lý Đăng xuất
+    function handleLogout() {
+        localStorage.removeItem('isLoggedIn');
+        document.getElementById('username').value = '';
+        document.getElementById('password').value = '';
+        showLogin();
+    }
+
+    function showApp() {
+        document.getElementById('login-box').style.display = 'none';
+        document.getElementById('main-app').style.display = 'block';
+        document.body.style.alignItems = 'flex-start'; // Điều chỉnh layout cho app lớn
+        updateDashboard();
+    }
+
+    function showLogin() {
+        document.getElementById('login-box').style.display = 'block';
+        document.getElementById('main-app').style.display = 'none';
+        document.body.style.alignItems = 'center';
+    }
+
+    // --- PHẦN LOGIC QUẢN LÝ THU NHẬP RÒNG ---
+    let transactions = JSON.parse(localStorage.getItem('transactions')) || [];
+
+    function formatCurrency(num) {
+        return new Intl.NumberFormat('vi-VN', { style: 'currency', currency: 'VND' }).format(num);
+    }
+
+    function parseShortenedAmount(inputVal) {
+        let cleanInput = inputVal.trim().toLowerCase();
+        if (!cleanInput) return NaN;
+
+        let multiplier = 1;
+        if (cleanInput.endsWith('k')) {
+            multiplier = 1000;
+            cleanInput = cleanInput.slice(0, -1);
+        } else if (cleanInput.endsWith('m')) {
+            multiplier = 1000000;
+            cleanInput = cleanInput.slice(0, -1);
+        }
+
+        cleanInput = cleanInput.replace(',', '.');
+        const parsedNumber = parseFloat(cleanInput);
+        if (isNaN(parsedNumber)) return NaN;
+
+        return parsedNumber * multiplier;
+    }
+
+    function updateDashboard() {
+        let totalIncome = 0;
+        let totalExpense = 0;
+
+        const listElement = document.getElementById('transaction-list');
+        if(!listElement) return;
+        listElement.innerHTML = '';
+
+        transactions.forEach((t, index) => {
+            if (t.type === 'income') {
+                totalIncome += t.amount;
+            } else {
+                totalExpense += t.amount;
+            }
+
+            const row = document.createElement('tr');
+            row.innerHTML = `
+                <td>${t.desc}</td>
+                <td class="${t.type === 'income' ? 'txt-income' : 'txt-expense'}">
+                    ${t.type === 'income' ? 'Thu Nhập' : 'Chi Phí'}
+                </td>
+                <td class="${t.type === 'income' ? 'txt-income' : 'txt-expense'}">
+                    ${t.type === 'income' ? '+' : '-'}${formatCurrency(t.amount)}
+                </td>
+                <td>
+                    <button class="btn-delete" onclick="deleteTransaction(${index})">Xóa</button>
+                </td>
+            `;
+            listElement.appendChild(row);
+        });
+
+        const netIncome = totalIncome - totalExpense;
+
+        document.getElementById('total-income').innerText = formatCurrency(totalIncome);
+        document.getElementById('total-expense').innerText = formatCurrency(totalExpense);
+        
+        const netElement = document.getElementById('net-income');
+        netElement.innerText = formatCurrency(netIncome);
+        
+        if (netIncome >= 0) {
+            netElement.style.color = '#2ecc71';
+        } else {
+            netElement.style.color = '#e74c3c';
+        }
+
+        localStorage.setItem('transactions', JSON.stringify(transactions));
+    }
+
+    function addTransaction() {
+        const descInput = document.getElementById('desc');
+        const amountInput = document.getElementById('amount');
+        const typeInput = document.getElementById('type');
+
+        const desc = descInput.value.trim();
+        const amount = parseShortenedAmount(amountInput.value);
+        const type = typeInput.value;
+
+        if (!desc || isNaN(amount) || amount <= 0) {
+            alert('Vui lòng nhập số tiền hợp lệ! (Ví dụ: 10k, 500k, 1.5m)');
+            return;
+        }
+
+        const newTransaction = { desc, amount, type };
+        transactions.push(newTransaction);
+        updateDashboard();
+
+        descInput.value = '';
+        amountInput.value = '';
+    }
+
+    function deleteTransaction(index) {
+        if (confirm('Bạn chắc chắn muốn xóa giao dịch này?')) {
+            transactions.splice(index, 1);
+            updateDashboard();
+        }
+    }
 </script>
+
 </body>
 </html>
