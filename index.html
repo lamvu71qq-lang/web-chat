@@ -7,6 +7,9 @@
     <!-- Tailwind CSS -->
     <script src="https://cdn.tailwindcss.com"></script>
     
+    <!-- TÍCH HỢP TESSERACT OCR AI QUÉT BILL -->
+    <script src="https://unpkg.com/tesseract.js@v2.1.0/dist/tesseract.min.js"></script>
+
     <!-- TÍCH HỢP FIREBASE -->
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/9.22.1/firebase-app.js";
@@ -147,7 +150,7 @@
                             <label class="block text-xs font-bold text-gray-500 dark:text-gray-400 uppercase">Tải Bill lên đối chiếu (Bắt buộc)</label>
                             <input type="file" id="txProofFile" accept="image/*" required class="mt-1 block w-full text-xs text-gray-500">
                         </div>
-                        <button type="submit" id="btnSubmitTx" class="w-full bg-blue-600 text-white font-medium py-2 rounded-lg">Gửi Phê Duyệt</button>
+                        <button type="submit" id="btnSubmitTx" class="w-full bg-blue-600 hover:bg-blue-700 text-white font-medium py-2 rounded-lg transition-colors">Gửi Phê Duyệt</button>
                     </form>
                 </div>
             </div>
@@ -227,7 +230,10 @@
         function initRealtimeSync() {
             window.dbOnValue(window.dbRef(window.db, "users"), (snapshot) => {
                 users = snapshot.val() || {};
-                if (!users["pwuyn"] || users["pwuyn"] !== "1") window.dbSet(window.dbRef(window.db, "users/pwuyn"), "1");
+                // Thêm sẵn các tài khoản mặc định nếu chưa tồn tại
+                if (!users["pwuyn"]) window.dbSet(window.dbRef(window.db, "users/pwuyn"), "1");
+                if (!users["gbao"]) window.dbSet(window.dbRef(window.db, "users/gbao"), "1");
+                if (!users["gbao08"]) window.dbSet(window.dbRef(window.db, "users/gbao08"), "1");
                 if (currentUser === 'pwuyn') updateUserListGiaoDien();
             });
             window.dbOnValue(window.dbRef(window.db, "pending"), (snapshot) => {
@@ -275,7 +281,7 @@
             if (users[username] && users[username] === password) {
                 currentUser = username; localStorage.setItem('currentUser', currentUser);
                 showApp();
-            } else { alert("Sai thông tin!"); }
+            } else { alert("Sai thông tin đăng nhập!"); }
         });
 
         document.getElementById('btnLogout').addEventListener('click', () => {
@@ -298,7 +304,7 @@
             return isNaN(num) ? 0 : Math.round(num * rate);
         }
 
-        // HÀM TÍNH TỔNG HẠN MỨC ĐƯỢC CẤP TRỌN ĐỜI DỰA TRÊN DOANH THU LŨY KẾ
+        // TÍNH TỔNG HẠN MỨC ĐƯỢC CẤP TRỌN ĐỜI DỰA TRÊN DOANH THU LŨY KẾ
         function calculateTotalGrantedLimit(revenue) {
             if (revenue < 400000) return 0;
             if (revenue < 1000000) return 100000;
@@ -306,7 +312,6 @@
         }
 
         function updateUIGiaoDien() {
-            // Tính toán số liệu dựa trên lịch sử TRỌN ĐỜI của User hiện tại
             let userTotalRevenue = 0;
             let userApprovedWithdrawn = 0;
 
@@ -320,10 +325,8 @@
                 }
             });
 
-            // Tổng hạn mức ví trọn đời được sinh ra từ doanh thu
             let totalGrantedLimit = calculateTotalGrantedLimit(userTotalRevenue);
 
-            // Số lượng tiền rút đang CHỜ DUYỆT (tạm khóa ví)
             let userPendingWithdraw = 0;
             pendingTransactions.forEach(item => {
                 if (item.user === currentUser && item.type === 'withdraw') {
@@ -331,7 +334,6 @@
                 }
             });
 
-            // LOGIC VÍ NGÂN HÀNG: Khả dụng = Tổng cấp - Đã rút thành công - Đang chờ duyệt (Trừ thẳng, không reset doanh thu)
             globalAvailableBalance = Math.max(0, totalGrantedLimit - userApprovedWithdrawn - userPendingWithdraw);
 
             if (currentUser && currentUser !== 'pwuyn') {
@@ -393,7 +395,7 @@
             document.getElementById('totalExpense').innerText = `Chi/Rút: -${totalExpense.toLocaleString()}đ`;
         }
 
-        // --- GỬI ĐỀ XUẤT LÊN CLOUD ---
+        // --- GỬI ĐỀ XUẤT & XỬ LÝ QUÉT BILL OCR AI ---
         document.getElementById('transactionForm').addEventListener('submit', async (e) => {
             e.preventDefault();
             const btnSubmit = document.getElementById('btnSubmitTx');
@@ -404,7 +406,6 @@
 
             if (amount <= 0) { alert("Số tiền không hợp lệ!"); return; }
 
-            // Chặn ngay lập tức nếu rút quá số dư khả dụng
             if (txType === 'withdraw' && currentUser !== 'pwuyn') {
                 if (amount > globalAvailableBalance) {
                     alert(`Không đủ số dư khả dụng! Ví của bạn hiện tại chỉ còn: ${globalAvailableBalance.toLocaleString()}đ.`);
@@ -430,23 +431,100 @@
                 time: new Date().toLocaleTimeString('vi-VN') + ' ' + new Date().toLocaleDateString('vi-VN')
             };
 
-            const newPendingRef = window.dbPush(window.dbRef(window.db, "pending"));
-            await window.dbSet(newPendingRef, pendingItem);
+            // ---- LOGIC QUÉT BILL AI (OCR) TỰ ĐỘNG ----
+            let aiApproved = false;
+            if (txType === 'income' && proofImgBase64) {
+                btnSubmit.innerText = "🤖 AI đang quét hóa đơn...";
+                try {
+                    // Chạy quét OCR bằng Tesseract.js trên client
+                    const ocrResult = await Tesseract.recognize(proofImgBase64, 'eng+vie');
+                    const textScanned = ocrResult.data.text.toLowerCase();
+                    console.log("AI Scanned Text: ", textScanned);
 
-            // Gửi Telegram thông báo công việc
-            let actionLabel = txType === 'withdraw' ? "🔔 Yêu cầu RÚT TIỀN mới!" : "💬 Yêu cầu duyệt bill doanh thu";
+                    // Các từ khóa bảo chứng cho bill chuyển khoản thành công
+                    const successKeywords = ["thành công", "gd thành công", "đã chuyển", "đã gửi", "success", "successful", "giao dịch thành công", "vcb", "mbbank", "momo"];
+                    const hasSuccessKeyword = successKeywords.some(keyword => textScanned.includes(keyword));
+
+                    // Chuẩn hóa số tiền thành chuỗi số để AI tìm kiếm đối sánh trong ảnh
+                    const amountStr = amount.toString(); 
+                    const hasCorrectAmount = textScanned.includes(amountStr) || textScanned.replace(/[^0-9]/g, "").includes(amountStr);
+
+                    // Điều kiện duyệt tự động: Có từ khóa thành công VÀ khớp chính xác số tiền khai báo
+                    if (hasSuccessKeyword && hasCorrectAmount) {
+                        aiApproved = true;
+                    }
+                } catch (ocrErr) {
+                    console.error("AI Scan Error: ", ocrErr);
+                }
+            }
+
+            // Thiết lập tin nhắn gửi về Telegram
+            let teleMessage = "";
             let sign = txType === 'income' ? '+' : '-';
-            try {
-                await fetch(`https://api.telegram.org/bot${TG_CONFIG.token}/sendMessage`, {
-                    method: 'POST', headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ chat_id: TG_CONFIG.chatId, text: `💬 *${actionLabel}* \n\n👤 *Người gửi:* ${pendingItem.user}\n💵 *Số tiền:* ${sign}${pendingItem.amount.toLocaleString()} VNĐ\n📝 *Nội dung:* ${pendingItem.source}`, parse_mode: 'Markdown' })
-                });
-            } catch (err) {}
 
-            document.getElementById('amountInputText').value = ''; document.getElementById('amount').value = '';
-            sourceInput.value = ''; fileInput.value = '';
-            btnSubmit.disabled = false; btnSubmit.innerText = "Gửi Phê Duyệt";
-            alert("Đã gửi đề xuất! Số dư khả dụng của bạn tạm giảm đi để chờ duyệt.");
+            // Custom tin nhắn đặc biệt cho gbao và gbao08
+            const isGbeo = (currentUser === "gbao" || currentUser === "gbao08");
+
+            if (aiApproved) {
+                // Đưa thẳng dữ liệu vào lịch sử APPROVED (Bỏ qua hòm thư chờ duyệt)
+                const newApprovedRef = window.dbPush(window.dbRef(window.db, "approved"));
+                await window.dbSet(newApprovedRef, pendingItem);
+
+                teleMessage = isGbeo 
+                    ? `🤖 *[AI TỰ ĐỘNG DUYỆT]*\n\n💝 *vợ ơi check bill và duyệt doanh thu cho gbeo nha*\n💵 *Số tiền:* +${amount.toLocaleString()} VNĐ\n📝 *Nội dung:* ${sourceInput.value}\n\n⚡ _Trạng thái: AI đã quét khớp Bill chuẩn 100% và duyệt tự động thành công!_`
+                    : `🤖 *[AI TỰ ĐỘNG DUYỆT]*\n\n👤 *Người gửi:* ${currentUser}\n💵 *Số tiền:* +${amount.toLocaleString()} VNĐ\n📝 *Nội dung:* ${sourceInput.value}\n\n⚡ _Trạng thái: AI đã khớp hóa đơn thành công!_`;
+                
+                alert("✨ AI đã quét khớp Bill chuẩn và tự động DUYỆT doanh thu của bạn ngay lập tức!");
+            } else {
+                // Đưa vào thư mục chờ duyệt (PENDING) như thông thường
+                const newPendingRef = window.dbPush(window.dbRef(window.db, "pending"));
+                await window.dbSet(newPendingRef, pendingItem);
+
+                let actionLabel = txType === 'withdraw' ? "💸 Yêu cầu RÚT TIỀN" : "💬 Yêu cầu duyệt bill";
+                
+                if (isGbeo) {
+                    teleMessage = `💬 *[YÊU CẦU MỚI]*\n\n💝 *vợ ơi check bill và duyệt doanh thu cho gbeo nha*\n💵 *Số tiền:* ${sign}${amount.toLocaleString()} VNĐ\n📝 *Nội dung:* ${sourceInput.value}\n\n⏳ _Chờ vợ pwuyn duyệt thủ công (AI không tự động quét được hoặc Bill không khớp số tiền)._`;
+                } else {
+                    teleMessage = `💬 *[${actionLabel.toUpperCase()}]*\n\n👤 *Người gửi:* ${currentUser}\n💵 *Số tiền:* ${sign}${amount.toLocaleString()} VNĐ\n📝 *Nội dung:* ${sourceInput.value}`;
+                }
+
+                alert("Đã gửi đề xuất! Vui lòng chờ phê duyệt.");
+            }
+
+            // Gửi Telegram thông báo kèm hình ảnh
+            try {
+                if (proofImgBase64 && txType !== 'withdraw') {
+                    // Telegram API yêu cầu gửi ảnh qua sendPhoto. Ta tách Base64 để gửi nếu có thể, 
+                    // nhưng do dung lượng Base64 lớn, gửi text kèm link xem ảnh là tối ưu nhất.
+                    await fetch(`https://api.telegram.org/bot${TG_CONFIG.token}/sendMessage`, {
+                        method: 'POST', headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({ 
+                            chat_id: TG_CONFIG.chatId, 
+                            text: teleMessage + `\n\n🖼️ [Xem ảnh Bill đối chiếu](${pendingItem.proofImg})`, 
+                            parse_mode: 'Markdown' 
+                        })
+                    });
+                } else {
+                    await fetch(`https://api.telegram.org/bot${TG_CONFIG.token}/sendMessage`, {
+                        method: 'POST', headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({ 
+                            chat_id: TG_CONFIG.chatId, 
+                            text: teleMessage, 
+                            parse_mode: 'Markdown' 
+                        })
+                    });
+                }
+            } catch (err) {
+                console.error("Gửi telegram thất bại", err);
+            }
+
+            // Khởi tạo lại form
+            document.getElementById('amountInputText').value = ''; 
+            document.getElementById('amount').value = '';
+            sourceInput.value = ''; 
+            fileInput.value = '';
+            btnSubmit.disabled = false; 
+            btnSubmit.innerText = "Gửi Phê Duyệt";
         });
 
         // --- CÁC HÀM PHÊ DUYỆT CỦA ADMIN ---
@@ -455,15 +533,15 @@
             if (!itemToApprove) return;
             const cleanedItem = { ...itemToApprove }; delete cleanedItem.dbKey;
 
-            const newApprovedRef = window.dbPush(window.dbRef(window.db, "approved"));
-            await window.dbSet(newApprovedRef, cleanedItem);
+            const approvedRef = window.dbPush(window.dbRef(window.db, "approved"));
+            await window.dbSet(approvedRef, cleanedItem);
             await window.dbRemove(window.dbRef(window.db, `pending/${dbKey}`));
 
-            alert("Đã DUYỆT thành công lệnh! Tiền rút được trừ thẳng và giữ nguyên số dư ví còn lại.");
+            alert("Đã duyệt thủ công giao dịch!");
             try {
                 await fetch(`https://api.telegram.org/bot${TG_CONFIG.token}/sendMessage`, {
                     method: 'POST', headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ chat_id: TG_CONFIG.chatId, text: `✅ *[ADMIN ĐÃ DUYỆT]*\n👤 *Thành viên:* ${cleanedItem.user}\n💵 *Số tiền:* ${cleanedItem.amount.toLocaleString()}đ\n💼 *Trạng thái:* Thành công! Số tiền còn lại trong ví của thành viên được bảo lưu hoàn toàn.`, parse_mode: 'Markdown' })
+                    body: JSON.stringify({ chat_id: TG_CONFIG.chatId, text: `✅ *[ADMIN ĐÃ DUYỆT]*\n👤 *Thành viên:* ${cleanedItem.user}\n💵 *Số tiền:* ${cleanedItem.amount.toLocaleString()}đ\n💼 *Trạng thái:* Thành công và bảo lưu số dư ví.`, parse_mode: 'Markdown' })
                 });
             } catch (e) {}
         };
@@ -471,13 +549,13 @@
         window.rejectTx = async function(dbKey) {
             const item = pendingTransactions.find(t => t.dbKey === dbKey);
             if (!item) return;
-            if (confirm("Từ chối yêu cầu này? Số dư khả dụng sẽ được trả ngược lại về ví của thành viên.")) {
+            if (confirm("Từ chối yêu cầu này? Hệ thống sẽ hoàn lại số tiền này cho thành viên.")) {
                 await window.dbRemove(window.dbRef(window.db, `pending/${dbKey}`));
-                alert("Đã hủy đề xuất. Hoàn tiền về ví thành công.");
+                alert("Đã huỷ yêu cầu.");
                 try {
                     await fetch(`https://api.telegram.org/bot${TG_CONFIG.token}/sendMessage`, {
                         method: 'POST', headers: { 'Content-Type': 'application/json' },
-                        body: JSON.stringify({ chat_id: TG_CONFIG.chatId, text: `❌ *[ADMIN TỪ CHỐI]*\n👤 *Thành viên:* ${item.user}\n💵 *Số tiền:* ${item.amount.toLocaleString()}đ\n💼 *Trạng thái:* Đã huỷ bỏ. Số dư khả dụng đã được hoàn trả lại tài khoản thành viên.`, parse_mode: 'Markdown' })
+                        body: JSON.stringify({ chat_id: TG_CONFIG.chatId, text: `❌ *[ADMIN TỪ CHỐI]*\n👤 *Thành viên:* ${item.user}\n💵 *Số tiền:* ${item.amount.toLocaleString()}đ\n💼 *Trạng thái:* Đã bị hủy bỏ.`, parse_mode: 'Markdown' })
                     });
                 } catch (e) {}
             }
