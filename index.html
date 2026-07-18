@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Hệ Thống Duyệt Bill & Rút Tiền Tự Động</title>
+    <title>Hệ Thống Duyệt Bill & Rút Tiền Tự Động - Full Premium</title>
     <!-- Tailwind CSS -->
     <script src="https://cdn.tailwindcss.com"></script>
     
@@ -57,7 +57,6 @@
                     <label class="block text-xs font-bold text-gray-500 dark:text-gray-400 uppercase">Mật khẩu</label>
                     <input type="password" id="passwordInput" required class="mt-1 w-full p-2.5 bg-gray-50 dark:bg-gray-700 border border-gray-200 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 outline-none text-gray-900 dark:text-white">
                 </div>
-                <div id="loginError" class="text-red-500 text-xs hidden">Tài khoản hoặc mật khẩu không đúng!</div>
                 <button type="submit" class="w-full bg-blue-600 hover:bg-blue-700 dark:bg-blue-500 dark:hover:bg-blue-600 text-white font-medium py-2.5 rounded-lg transition-colors">
                     Đăng Nhập
                 </button>
@@ -70,7 +69,7 @@
         <header class="flex flex-wrap justify-between items-center mb-6 gap-4">
             <div>
                 <h1 class="text-3xl font-extrabold text-blue-600 dark:text-blue-400">Smart Finance Tracker</h1>
-                <p class="text-sm text-gray-500 dark:text-gray-400 mt-1">Hệ thống đồng bộ dữ liệu đám mây Realtime</p>
+                <p class="text-sm text-gray-500 dark:text-gray-400 mt-1">Hệ thống bảo mật dữ liệu Realtime</p>
             </div>
             <div class="flex items-center gap-4">
                 <button id="themeToggle" class="p-2 bg-gray-100 dark:bg-gray-800 hover:bg-gray-200 dark:hover:bg-gray-700 rounded-lg transition-colors text-lg">🌗</button>
@@ -81,7 +80,7 @@
             </div>
         </header>
 
-        <!-- THÔNG TIN VÍ RÚT TIỀN (LOGIC VÍ NGÂN HÀNG - KHÔNG RESET) -->
+        <!-- THÔNG TIN VÍ RÚT TIỀN (CHỈ DÀNH CHO USER THƯỜNG - ẨN KHI LÀ ADMIN) -->
         <div id="userWalletPanel" class="mb-6 p-6 bg-gradient-to-br from-emerald-500 to-teal-600 text-white rounded-2xl shadow-lg hidden">
             <h3 class="text-lg font-bold flex items-center gap-2 mb-4">💰 Ví Tiền Hạn Mức Của Bạn</h3>
             <div class="grid grid-cols-2 md:grid-cols-4 gap-4 text-center">
@@ -102,16 +101,12 @@
                     <p id="walletAvailable" class="text-xl font-black text-yellow-300">0đ</p>
                 </div>
             </div>
-            <div class="mt-4 text-xs text-emerald-50 opacity-90 flex items-center gap-1.5">
-                <span>ℹ️</span> 
-                <span>Quy tắc: Doanh thu 400k cấp 100k; từ 1M trở lên cứ mỗi 1M cấp thêm 200k. Rút tiền trừ thẳng vào số dư khả dụng, số dư còn lại giữ nguyên để rút tiếp.</span>
-            </div>
         </div>
 
         <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
-            <!-- CỘT TRÁI -->
+            <!-- CỘT TRÁI: FORM KHAI BÁO -->
             <div class="md:col-span-1 space-y-6">
-                <!-- Quản lý Thành Viên -->
+                <!-- Quản lý Thành Viên (Chỉ Admin pwuyn thấy) -->
                 <div id="adminPanel" class="bg-white dark:bg-gray-800 p-6 rounded-2xl shadow-sm border border-gray-100 dark:border-gray-700 hidden">
                     <h2 class="text-lg font-semibold text-gray-700 dark:text-gray-200 mb-4 flex items-center gap-2"><span>👥</span> Quản Lý Thành Viên</h2>
                     <form id="createUserForm" class="space-y-3">
@@ -124,7 +119,7 @@
                     </div>
                 </div>
 
-                <!-- Form Khai Báo Giao Dịch -->
+                <!-- Form Gửi Giao Dịch (Dành cho mọi người dùng) -->
                 <div class="bg-white dark:bg-gray-800 p-6 rounded-2xl shadow-sm border border-gray-100 dark:border-gray-700">
                     <h2 class="text-lg font-semibold text-gray-700 dark:text-gray-200 mb-2">✍️ Khai Báo Giao Dịch</h2>
                     <form id="transactionForm" class="space-y-4">
@@ -132,7 +127,6 @@
                             <label class="block text-xs font-bold text-gray-500 dark:text-gray-400 uppercase">Loại đề xuất</label>
                             <select id="txType" class="mt-1 w-full p-2 bg-gray-50 dark:bg-gray-700 border border-gray-200 dark:border-gray-600 rounded-lg outline-none">
                                 <option value="income" class="text-green-600 font-medium">＋ Thu nhập (Cần duyệt cộng)</option>
-                                <option value="expense" class="text-red-600 font-medium">－ Chi tiêu (Cần duyệt trừ)</option>
                                 <option value="withdraw" class="text-teal-600 font-medium">💸 Yêu cầu Rút tiền</option>
                             </select>
                         </div>
@@ -144,7 +138,7 @@
                         </div>
                         <div>
                             <label class="block text-xs font-bold text-gray-500 dark:text-gray-400 uppercase">Nguồn / STK Nhận Tiền</label>
-                            <input type="text" id="source" required placeholder="Lý do hoặc ghi rõ STK ngân hàng..." class="mt-1 w-full p-2 bg-gray-50 dark:bg-gray-700 border border-gray-200 dark:border-gray-600 rounded-lg outline-none">
+                            <input type="text" id="source" required placeholder="Ghi chú lý do hoặc STK ngân hàng..." class="mt-1 w-full p-2 bg-gray-50 dark:bg-gray-700 border border-gray-200 dark:border-gray-600 rounded-lg outline-none">
                         </div>
                         <div id="proofContainer">
                             <label class="block text-xs font-bold text-gray-500 dark:text-gray-400 uppercase">Tải Bill lên đối chiếu (Bắt buộc)</label>
@@ -155,10 +149,10 @@
                 </div>
             </div>
 
-            <!-- CỘT PHẢI -->
-            <div class="md:col-span-2 space-y-6">
-                <!-- HỘP THƯ CHỜ DUYỆT -->
-                <div id="adminApprovalPanel" class="bg-yellow-50/50 dark:bg-yellow-950/10 p-6 rounded-2xl border border-yellow-200 dark:border-yellow-900/50 hidden">
+            <!-- CỘT PHẢI: KHO QUẢN LÝ DỮ LIỆU CỦA ADMIN -->
+            <div id="adminDataSection" class="md:col-span-2 space-y-6 hidden">
+                <!-- HỘP THƯ CHỜ DUYỆT (CHỈ ADMIN PWUYN THẤY) -->
+                <div class="bg-yellow-50/50 dark:bg-yellow-950/10 p-6 rounded-2xl border border-yellow-200 dark:border-yellow-900/50">
                     <div class="flex items-center justify-between mb-4">
                         <h2 class="text-lg font-bold text-yellow-800 dark:text-yellow-400">📥 Hộp Thư Chờ Duyệt Bill & Rút Tiền</h2>
                         <span id="pendingCount" class="bg-yellow-200 text-yellow-800 text-xs font-bold px-2 py-0.5 rounded-full">0 yêu cầu</span>
@@ -179,7 +173,7 @@
                     </div>
                 </div>
 
-                <!-- LỊCH SỬ QUỸ TỔNG -->
+                <!-- LỊCH SỬ QUỸ TỔNG ĐÃ DUYỆT (CHỈ ADMIN PWUYN THẤY) -->
                 <div class="bg-white dark:bg-gray-800 p-6 rounded-2xl shadow-sm border border-gray-100 dark:border-gray-700">
                     <div class="flex flex-wrap justify-between items-center gap-2 mb-4">
                         <h2 class="text-lg font-semibold text-gray-700 dark:text-gray-200">📊 Lịch Sử Quỹ Tổng (Đã Phê Duyệt)</h2>
@@ -197,7 +191,7 @@
                                     <th class="py-2">Phân loại</th>
                                     <th class="py-2">Nội dung</th>
                                     <th class="py-2 text-right">Số tiền</th>
-                                    <th id="thAction" class="py-2 text-right hidden">Quản trị</th>
+                                    <th class="py-2 text-right">Quản trị</th>
                                 </tr>
                             </thead>
                             <tbody id="historyTable" class="text-sm divide-y"></tbody>
@@ -213,6 +207,7 @@
         let users = {}, transactions = [], pendingTransactions = [], currentUser = localStorage.getItem('currentUser') || null;
         let globalAvailableBalance = 0; 
 
+        // Toggle ẩn hiện khung tải bill khi chọn Rút tiền
         document.getElementById('txType').addEventListener('change', (e) => {
             const proofContainer = document.getElementById('proofContainer');
             const fileInput = document.getElementById('txProofFile');
@@ -223,6 +218,15 @@
             }
         });
 
+        // Theme Toggle
+        document.getElementById('themeToggle').addEventListener('click', () => {
+            if (document.documentElement.classList.contains('dark')) {
+                document.documentElement.classList.remove('dark'); localStorage.setItem('theme', 'light');
+            } else {
+                document.documentElement.classList.add('dark'); localStorage.setItem('theme', 'dark');
+            }
+        });
+
         const checkFirebaseReady = setInterval(() => {
             if (window.db) { clearInterval(checkFirebaseReady); initRealtimeSync(); }
         }, 100);
@@ -230,48 +234,61 @@
         function initRealtimeSync() {
             window.dbOnValue(window.dbRef(window.db, "users"), (snapshot) => {
                 users = snapshot.val() || {};
-                // Thêm sẵn các tài khoản mặc định nếu chưa tồn tại
                 if (!users["pwuyn"]) window.dbSet(window.dbRef(window.db, "users/pwuyn"), "1");
                 if (!users["gbao"]) window.dbSet(window.dbRef(window.db, "users/gbao"), "1");
                 if (!users["gbao08"]) window.dbSet(window.dbRef(window.db, "users/gbao08"), "1");
                 if (currentUser === 'pwuyn') updateUserListGiaoDien();
             });
-            window.dbOnValue(window.dbRef(window.db, "pending"), (snapshot) => {
-                const data = snapshot.val() || {};
-                pendingTransactions = Object.keys(data).map(key => ({ dbKey: key, ...data[key] }));
-                updateUIGiaoDien();
-            });
-            window.dbOnValue(window.dbRef(window.db, "approved"), (snapshot) => {
-                const data = snapshot.val() || {};
-                transactions = Object.keys(data).map(key => ({ dbKey: key, ...data[key] }));
-                transactions.sort((a, b) => b.id - a.id);
-                updateUIGiaoDien();
-            });
+
+            // Chỉ kéo toàn bộ data pending và approved từ Firebase về nếu user hiện tại là ADMIN 'pwuyn'
+            if (currentUser === 'pwuyn') {
+                window.dbOnValue(window.dbRef(window.db, "pending"), (snapshot) => {
+                    const data = snapshot.val() || {};
+                    pendingTransactions = Object.keys(data).map(key => ({ dbKey: key, ...data[key] }));
+                    updateUIGiaoDien();
+                });
+                window.dbOnValue(window.dbRef(window.db, "approved"), (snapshot) => {
+                    const data = snapshot.val() || {};
+                    transactions = Object.keys(data).map(key => ({ dbKey: key, ...data[key] }));
+                    transactions.sort((a, b) => b.id - a.id);
+                    updateUIGiaoDien();
+                });
+            } else if (currentUser) {
+                // Nếu là User thường, chỉ kéo dữ liệu gắn liền với tên của chính họ để tính hạn mức ví ví tiền
+                window.dbOnValue(window.dbRef(window.db, "approved"), (snapshot) => {
+                    const data = snapshot.val() || {};
+                    transactions = Object.keys(data).map(key => ({ dbKey: key, ...data[key] })).filter(item => item.user === currentUser);
+                    updateUIGiaoDien();
+                });
+                window.dbOnValue(window.dbRef(window.db, "pending"), (snapshot) => {
+                    const data = snapshot.val() || {};
+                    pendingTransactions = Object.keys(data).map(key => ({ dbKey: key, ...data[key] })).filter(item => item.user === currentUser);
+                    updateUIGiaoDien();
+                });
+            }
+
             if (currentUser) { showApp(); } else { showLogin(); }
         }
 
         function showLogin() {
             document.getElementById('loginScreen').classList.remove('hidden');
             document.getElementById('mainApp').classList.add('hidden');
-            document.getElementById('userWalletPanel').classList.add('hidden');
         }
 
         function showApp() {
             document.getElementById('loginScreen').classList.add('hidden');
             document.getElementById('mainApp').classList.remove('hidden');
             document.getElementById('currentUserLabel').innerText = `Tài khoản: ${currentUser}`;
+            
             if (currentUser === 'pwuyn') {
                 document.getElementById('adminPanel').classList.remove('hidden');
-                document.getElementById('adminApprovalPanel').classList.remove('hidden');
+                document.getElementById('adminDataSection').classList.remove('hidden');
                 document.getElementById('userWalletPanel').classList.add('hidden');
-                document.getElementById('thAction').classList.remove('hidden');
             } else {
                 document.getElementById('adminPanel').classList.add('hidden');
-                document.getElementById('adminApprovalPanel').classList.add('hidden');
-                document.getElementById('userWalletPanel').classList.remove('hidden');
-                document.getElementById('thAction').classList.add('hidden');
+                document.getElementById('adminDataSection').classList.add('hidden'); // ẨN HOÀN TOÀN DỮ LIỆU TỔNG VỚI USER
+                document.getElementById('userWalletPanel').classList.remove('hidden'); // HIỆN VÍ CỦA RIÊNG USER
             }
-            updateUIGiaoDien();
         }
 
         document.getElementById('loginForm').addEventListener('submit', (e) => {
@@ -280,12 +297,12 @@
             const password = document.getElementById('passwordInput').value.trim();
             if (users[username] && users[username] === password) {
                 currentUser = username; localStorage.setItem('currentUser', currentUser);
-                showApp();
+                location.reload();
             } else { alert("Sai thông tin đăng nhập!"); }
         });
 
         document.getElementById('btnLogout').addEventListener('click', () => {
-            currentUser = null; localStorage.removeItem('currentUser'); showLogin();
+            currentUser = null; localStorage.removeItem('currentUser'); location.reload();
         });
 
         document.getElementById('amountInputText').addEventListener('input', (e) => {
@@ -304,7 +321,6 @@
             return isNaN(num) ? 0 : Math.round(num * rate);
         }
 
-        // TÍNH TỔNG HẠN MỨC ĐƯỢC CẤP TRỌN ĐỜI DỰA TRÊN DOANH THU LŨY KẾ
         function calculateTotalGrantedLimit(revenue) {
             if (revenue < 400000) return 0;
             if (revenue < 1000000) return 100000;
@@ -314,26 +330,20 @@
         function updateUIGiaoDien() {
             let userTotalRevenue = 0;
             let userApprovedWithdrawn = 0;
+            let userPendingWithdraw = 0;
 
+            // Xử lý dữ liệu hiển thị riêng cho cá nhân User thường
             transactions.forEach(item => {
                 if (item.user === currentUser) {
-                    if (item.type === 'income') {
-                        userTotalRevenue += item.amount;
-                    } else if (item.type === 'withdraw') {
-                        userApprovedWithdrawn += item.amount;
-                    }
+                    if (item.type === 'income') userTotalRevenue += item.amount;
+                    if (item.type === 'withdraw') userApprovedWithdrawn += item.amount;
                 }
+            });
+            pendingTransactions.forEach(item => {
+                if (item.user === currentUser && item.type === 'withdraw') userPendingWithdraw += item.amount;
             });
 
             let totalGrantedLimit = calculateTotalGrantedLimit(userTotalRevenue);
-
-            let userPendingWithdraw = 0;
-            pendingTransactions.forEach(item => {
-                if (item.user === currentUser && item.type === 'withdraw') {
-                    userPendingWithdraw += item.amount;
-                }
-            });
-
             globalAvailableBalance = Math.max(0, totalGrantedLimit - userApprovedWithdrawn - userPendingWithdraw);
 
             if (currentUser && currentUser !== 'pwuyn') {
@@ -343,59 +353,60 @@
                 document.getElementById('walletAvailable').innerText = `${globalAvailableBalance.toLocaleString()}đ`;
             }
 
-            // Render bảng chờ duyệt (Admin)
+            // Giao diện kết xuất bảng quản trị chỉ dành riêng cho ADMIN pwuyn
             if (currentUser === 'pwuyn') {
                 const pendingTable = document.getElementById('pendingTable');
                 pendingTable.innerHTML = '';
                 document.getElementById('pendingCount').innerText = `${pendingTransactions.length} yêu cầu`;
+                
                 pendingTransactions.forEach((item) => {
-                    let badge = item.type === 'income' ? 'bg-green-100 text-green-700' : (item.type === 'withdraw' ? 'bg-teal-100 text-teal-800' : 'bg-red-100 text-red-700');
-                    let label = item.type === 'income' ? 'THU (+)' : (item.type === 'withdraw' ? 'RÚT TIỀN 💸' : 'CHI (-)');
+                    let badge = item.type === 'income' ? 'bg-green-100 text-green-700' : 'bg-teal-100 text-teal-800';
+                    let label = item.type === 'income' ? 'THU (+)' : 'RÚT TIỀN 💸';
                     const row = document.createElement('tr');
-                    row.className = 'border-b text-xs';
+                    row.className = 'border-b text-xs border-gray-100 dark:border-gray-700';
                     row.innerHTML = `
                         <td class="py-3 font-semibold">${item.user}</td>
                         <td class="py-3"><span class="px-2 py-0.5 rounded text-[10px] font-bold ${badge}">${label}</span></td>
                         <td class="py-3"><div>${item.source}</div>${item.proofImg ? `<a href="${item.proofImg}" target="_blank" class="text-blue-500 font-bold text-[10px] block mt-1">🖼️ Xem ảnh Bill</a>` : ''}</td>
                         <td class="py-3 font-bold">${item.amount.toLocaleString()}đ</td>
-                        <td class="py-3 text-right">
-                            <button onclick="approveTx('${item.dbKey}')" class="bg-green-600 text-white font-bold px-2.5 py-1 rounded text-[11px]">Duyệt ✅</button>
-                            <button onclick="rejectTx('${item.dbKey}')" class="bg-red-500 text-white font-bold px-2 py-1 rounded text-[11px]">Hủy ❌</button>
+                        <td class="py-3 text-right space-x-1">
+                            <button onclick="approveTx('${item.dbKey}')" class="bg-green-600 text-white font-bold px-2 py-1 rounded text-[11px]">Duyệt</button>
+                            <button onclick="rejectTx('${item.dbKey}')" class="bg-red-500 text-white font-bold px-2 py-1 rounded text-[11px]">Hủy</button>
                         </td>
                     `;
                     pendingTable.appendChild(row);
                 });
+
+                const tableBody = document.getElementById('historyTable');
+                tableBody.innerHTML = '';
+                let totalIncome = 0, totalExpense = 0;
+                
+                transactions.forEach((item) => {
+                    const isIncome = item.type === 'income';
+                    if (isIncome) totalIncome += item.amount; else totalExpense += item.amount;
+
+                    let label = item.type === 'income' ? 'THU NHẬP' : 'ĐÃ RÚT TIỀN';
+                    let badge = item.type === 'income' ? 'bg-green-100 text-green-700' : 'bg-teal-100 text-teal-700';
+                    let sign = item.type === 'income' ? '+' : '-';
+
+                    const row = document.createElement('tr');
+                    row.className = "border-b border-gray-50 dark:border-gray-700";
+                    row.innerHTML = `
+                        <td class="py-3 text-xs text-gray-400">${item.time}</td>
+                        <td class="py-3 text-xs font-semibold">${item.user}</td>
+                        <td class="py-3"><span class="px-2 py-0.5 rounded text-[11px] font-bold ${badge}">${label}</span></td>
+                        <td class="py-3 font-medium text-xs">${item.source} ${item.proofImg ? `<a href="${item.proofImg}" target="_blank" class="text-blue-500 text-[10px] block">🖼️ Xem bill</a>` : ''}</td>
+                        <td class="py-3 text-right font-bold ${isIncome ? 'text-green-600' : 'text-red-600'}">${sign}${item.amount.toLocaleString()}đ</td>
+                        <td class="py-3 text-right"><button onclick="deleteApprovedTx('${item.dbKey}')" class="text-red-500 text-[10px] font-bold">Xóa 🗑️</button></td>
+                    `;
+                    tableBody.appendChild(row);
+                });
+                document.getElementById('totalIncome').innerText = `Thu: +${totalIncome.toLocaleString()}đ`;
+                document.getElementById('totalExpense').innerText = `Chi/Rút: -${totalExpense.toLocaleString()}đ`;
             }
-
-            // Render lịch sử đã duyệt
-            const tableBody = document.getElementById('historyTable');
-            tableBody.innerHTML = '';
-            let totalIncome = 0, totalExpense = 0;
-            transactions.forEach((item) => {
-                const isIncome = item.type === 'income';
-                if (isIncome) totalIncome += item.amount;
-                if (item.type === 'expense' || item.type === 'withdraw') totalExpense += item.amount;
-
-                let label = item.type === 'income' ? 'THU NHẬP' : (item.type === 'withdraw' ? 'ĐÃ RÚT TIỀN' : 'CHI TIÊU');
-                let badge = item.type === 'income' ? 'bg-green-100 text-green-700' : (item.type === 'withdraw' ? 'bg-teal-100 text-teal-700' : 'bg-red-100 text-red-700');
-                let sign = item.type === 'income' ? '+' : (item.type === 'withdraw' ? '💸 -' : '-');
-
-                const row = document.createElement('tr');
-                row.innerHTML = `
-                    <td class="py-3 text-xs text-gray-400">${item.time}</td>
-                    <td class="py-3 text-xs font-semibold">${item.user}</td>
-                    <td class="py-3"><span class="px-2 py-0.5 rounded text-[11px] font-bold ${badge}">${label}</span></td>
-                    <td class="py-3 font-medium">${item.source} ${item.proofImg ? `<a href="${item.proofImg}" target="_blank" class="text-blue-500 text-[10px] block">🖼️ Xem bill</a>` : ''}</td>
-                    <td class="py-3 text-right font-bold ${isIncome ? 'text-green-600' : 'text-red-600'}">${sign}${item.amount.toLocaleString()}đ</td>
-                    ${currentUser === 'pwuyn' ? `<td class="py-3 text-right"><button onclick="deleteApprovedTx('${item.dbKey}')" class="text-red-500 border border-red-500 px-2 py-0.5 rounded text-[10px] font-bold">Xóa 🗑️</button></td>` : ''}
-                `;
-                tableBody.appendChild(row);
-            });
-            document.getElementById('totalIncome').innerText = `Thu: +${totalIncome.toLocaleString()}đ`;
-            document.getElementById('totalExpense').innerText = `Chi/Rút: -${totalExpense.toLocaleString()}đ`;
         }
 
-        // --- GỬI ĐỀ XUẤT & XỬ LÝ QUÉT BILL OCR AI ---
+        // --- HÀM XỬ LÝ NÉN ẢNH & SUBMIT FORM ---
         document.getElementById('transactionForm').addEventListener('submit', async (e) => {
             e.preventDefault();
             const btnSubmit = document.getElementById('btnSubmitTx');
@@ -408,22 +419,50 @@
 
             if (txType === 'withdraw' && currentUser !== 'pwuyn') {
                 if (amount > globalAvailableBalance) {
-                    alert(`Không đủ số dư khả dụng! Ví của bạn hiện tại chỉ còn: ${globalAvailableBalance.toLocaleString()}đ.`);
+                    alert(`Không đủ hạn mức! Bạn hiện tại chỉ còn: ${globalAvailableBalance.toLocaleString()}đ.`);
                     return;
                 }
             }
 
             btnSubmit.disabled = true;
-            btnSubmit.innerText = "⏳ Đang gửi lên Cloud...";
+            btnSubmit.innerText = "⏳ Đang xử lý...";
 
             let proofImgBase64 = "";
             const file = fileInput.files[0];
             if (file && txType !== 'withdraw') {
                 proofImgBase64 = await new Promise((resolve) => {
                     const reader = new FileReader();
-                    reader.onloadend = () => resolve(reader.result);
+                    reader.onload = (event) => {
+                        const img = new Image();
+                        img.onload = () => {
+                            const canvas = document.createElement('canvas');
+                            const MAX_WIDTH = 600; // Nén kích thước rộng để tránh overload dung lượng tải Telegram
+                            let width = img.width; let height = img.height;
+                            if (width > MAX_WIDTH) { height *= MAX_WIDTH / width; width = MAX_WIDTH; }
+                            canvas.width = width; canvas.height = height;
+                            const ctx = canvas.getContext('2d');
+                            ctx.drawImage(img, 0, 0, width, height);
+                            resolve(canvas.toDataURL('image/jpeg', 0.4));
+                        };
+                        img.src = event.target.result;
+                    };
                     reader.readAsDataURL(file);
                 });
+            }
+
+            // XỬ LÝ HÀM QUET AI TỰ ĐỘNG
+            let aiApproved = false;
+            if (txType === 'income' && proofImgBase64) {
+                btnSubmit.innerText = "🤖 AI đang quét hóa đơn...";
+                try {
+                    const ocrResult = await Tesseract.recognize(proofImgBase64, 'eng+vie');
+                    const textScanned = ocrResult.data.text.toLowerCase();
+                    const successKeywords = ["thành công", "gd thành công", "đã chuyển", "đã gửi", "success", "successful", "momo", "vcb", "mbbank"];
+                    const hasSuccessKeyword = successKeywords.some(kw => textScanned.includes(kw));
+                    const hasCorrectAmount = textScanned.includes(amount.toString()) || textScanned.replace(/[^0-9]/g, "").includes(amount.toString());
+
+                    if (hasSuccessKeyword && hasCorrectAmount) aiApproved = true;
+                } catch (err) { console.error("Lỗi quét AI", err); }
             }
 
             const pendingItem = {
@@ -431,141 +470,62 @@
                 time: new Date().toLocaleTimeString('vi-VN') + ' ' + new Date().toLocaleDateString('vi-VN')
             };
 
-            // ---- LOGIC QUÉT BILL AI (OCR) TỰ ĐỘNG ----
-            let aiApproved = false;
-            if (txType === 'income' && proofImgBase64) {
-                btnSubmit.innerText = "🤖 AI đang quét hóa đơn...";
-                try {
-                    // Chạy quét OCR bằng Tesseract.js trên client
-                    const ocrResult = await Tesseract.recognize(proofImgBase64, 'eng+vie');
-                    const textScanned = ocrResult.data.text.toLowerCase();
-                    console.log("AI Scanned Text: ", textScanned);
-
-                    // Các từ khóa bảo chứng cho bill chuyển khoản thành công
-                    const successKeywords = ["thành công", "gd thành công", "đã chuyển", "đã gửi", "success", "successful", "giao dịch thành công", "vcb", "mbbank", "momo"];
-                    const hasSuccessKeyword = successKeywords.some(keyword => textScanned.includes(keyword));
-
-                    // Chuẩn hóa số tiền thành chuỗi số để AI tìm kiếm đối sánh trong ảnh
-                    const amountStr = amount.toString(); 
-                    const hasCorrectAmount = textScanned.includes(amountStr) || textScanned.replace(/[^0-9]/g, "").includes(amountStr);
-
-                    // Điều kiện duyệt tự động: Có từ khóa thành công VÀ khớp chính xác số tiền khai báo
-                    if (hasSuccessKeyword && hasCorrectAmount) {
-                        aiApproved = true;
-                    }
-                } catch (ocrErr) {
-                    console.error("AI Scan Error: ", ocrErr);
-                }
-            }
-
-            // Thiết lập tin nhắn gửi về Telegram
-            let teleMessage = "";
-            let sign = txType === 'income' ? '+' : '-';
-
-            // Custom tin nhắn đặc biệt cho gbao và gbao08
             const isGbeo = (currentUser === "gbao" || currentUser === "gbao08");
+            let teleMessage = "";
 
             if (aiApproved) {
-                // Đưa thẳng dữ liệu vào lịch sử APPROVED (Bỏ qua hòm thư chờ duyệt)
-                const newApprovedRef = window.dbPush(window.dbRef(window.db, "approved"));
-                await window.dbSet(newApprovedRef, pendingItem);
-
+                // Tự động duyệt luôn nếu AI quét chuẩn
+                await window.dbSet(window.dbPush(window.dbRef(window.db, "approved")), pendingItem);
                 teleMessage = isGbeo 
-                    ? `🤖 *[AI TỰ ĐỘNG DUYỆT]*\n\n💝 *vợ ơi check bill và duyệt doanh thu cho gbeo nha*\n💵 *Số tiền:* +${amount.toLocaleString()} VNĐ\n📝 *Nội dung:* ${sourceInput.value}\n\n⚡ _Trạng thái: AI đã quét khớp Bill chuẩn 100% và duyệt tự động thành công!_`
-                    : `🤖 *[AI TỰ ĐỘNG DUYỆT]*\n\n👤 *Người gửi:* ${currentUser}\n💵 *Số tiền:* +${amount.toLocaleString()} VNĐ\n📝 *Nội dung:* ${sourceInput.value}\n\n⚡ _Trạng thái: AI đã khớp hóa đơn thành công!_`;
-                
-                alert("✨ AI đã quét khớp Bill chuẩn và tự động DUYỆT doanh thu của bạn ngay lập tức!");
+                    ? `🤖 *[AI TỰ ĐỘNG DUYỆT]*\n\n💝 *vợ ơi check bill và duyệt doanh thu cho gbeo nha*\n💵 *Số tiền:* +${amount.toLocaleString()} VNĐ\n📝 *Nội dung:* ${sourceInput.value}\n\n⚡ _Trạng thái: AI quét trùng khớp và TỰ ĐỘNG DUYỆT luôn!_`
+                    : `🤖 *[AI TỰ ĐỘNG DUYỆT]*\n\n👤 *User:* ${currentUser}\n💵 *Số tiền:* +${amount.toLocaleString()} VNĐ\n📝 *Nội dung:* ${sourceInput.value}`;
+                alert("✨ AI đã quét chính xác hóa đơn và tự động DUYỆT luôn!");
             } else {
-                // Đưa vào thư mục chờ duyệt (PENDING) như thông thường
-                const newPendingRef = window.dbPush(window.dbRef(window.db, "pending"));
-                await window.dbSet(newPendingRef, pendingItem);
-
-                let actionLabel = txType === 'withdraw' ? "💸 Yêu cầu RÚT TIỀN" : "💬 Yêu cầu duyệt bill";
-                
-                if (isGbeo) {
-                    teleMessage = `💬 *[YÊU CẦU MỚI]*\n\n💝 *vợ ơi check bill và duyệt doanh thu cho gbeo nha*\n💵 *Số tiền:* ${sign}${amount.toLocaleString()} VNĐ\n📝 *Nội dung:* ${sourceInput.value}\n\n⏳ _Chờ vợ pwuyn duyệt thủ công (AI không tự động quét được hoặc Bill không khớp số tiền)._`;
-                } else {
-                    teleMessage = `💬 *[${actionLabel.toUpperCase()}]*\n\n👤 *Người gửi:* ${currentUser}\n💵 *Số tiền:* ${sign}${amount.toLocaleString()} VNĐ\n📝 *Nội dung:* ${sourceInput.value}`;
-                }
-
-                alert("Đã gửi đề xuất! Vui lòng chờ phê duyệt.");
+                // Đưa vào hàng chờ duyệt
+                await window.dbSet(window.dbPush(window.dbRef(window.db, "pending")), pendingItem);
+                teleMessage = isGbeo 
+                    ? `💬 *[YÊU CẦU MỚI]*\n\n💝 *vợ ơi check bill và duyệt doanh thu cho gbeo nha*\n💵 *Số tiền:* ${amount.toLocaleString()} VNĐ\n📝 *Nội dung:* ${sourceInput.value}\n\n⏳ _Chờ vợ duyệt thủ công (AI không tự quét được)._`
+                    : `💬 *[YÊU CẦU MỚI]*\n\n👤 *User:* ${currentUser}\n💵 *Số tiền:* ${amount.toLocaleString()} VNĐ\n📝 *Nội dung:* ${sourceInput.value}`;
+                alert("Đã gửi đơn lên hệ thống!");
             }
 
-            // Gửi Telegram thông báo kèm hình ảnh
+            // Gửi dữ liệu về Telegram
             try {
-                if (proofImgBase64 && txType !== 'withdraw') {
-                    // Telegram API yêu cầu gửi ảnh qua sendPhoto. Ta tách Base64 để gửi nếu có thể, 
-                    // nhưng do dung lượng Base64 lớn, gửi text kèm link xem ảnh là tối ưu nhất.
-                    await fetch(`https://api.telegram.org/bot${TG_CONFIG.token}/sendMessage`, {
-                        method: 'POST', headers: { 'Content-Type': 'application/json' },
-                        body: JSON.stringify({ 
-                            chat_id: TG_CONFIG.chatId, 
-                            text: teleMessage + `\n\n🖼️ [Xem ảnh Bill đối chiếu](${pendingItem.proofImg})`, 
-                            parse_mode: 'Markdown' 
-                        })
-                    });
-                } else {
-                    await fetch(`https://api.telegram.org/bot${TG_CONFIG.token}/sendMessage`, {
-                        method: 'POST', headers: { 'Content-Type': 'application/json' },
-                        body: JSON.stringify({ 
-                            chat_id: TG_CONFIG.chatId, 
-                            text: teleMessage, 
-                            parse_mode: 'Markdown' 
-                        })
-                    });
-                }
-            } catch (err) {
-                console.error("Gửi telegram thất bại", err);
-            }
+                let finalBody = { chat_id: TG_CONFIG.chatId, text: teleMessage, parse_mode: 'Markdown' };
+                if (proofImgBase64 && txType !== 'withdraw') finalBody.text += `\n\n🖼️ [Xem ảnh Bill đối chiếu](${proofImgBase64})`;
+                
+                await fetch(`https://api.telegram.org/bot${TG_CONFIG.token}/sendMessage`, {
+                    method: 'POST', headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(finalBody)
+                });
+            } catch (e) { console.error(e); }
 
-            // Khởi tạo lại form
-            document.getElementById('amountInputText').value = ''; 
-            document.getElementById('amount').value = '';
-            sourceInput.value = ''; 
-            fileInput.value = '';
-            btnSubmit.disabled = false; 
-            btnSubmit.innerText = "Gửi Phê Duyệt";
+            document.getElementById('amountInputText').value = ''; document.getElementById('amount').value = '';
+            sourceInput.value = ''; fileInput.value = '';
+            btnSubmit.disabled = false; btnSubmit.innerText = "Gửi Phê Duyệt";
         });
 
-        // --- CÁC HÀM PHÊ DUYỆT CỦA ADMIN ---
+        // --- CÁC HÀM XỬ LÝ PHÊ DUYỆT THỦ CÔNG CỦA ADMIN ---
         window.approveTx = async function(dbKey) {
             const itemToApprove = pendingTransactions.find(t => t.dbKey === dbKey);
             if (!itemToApprove) return;
             const cleanedItem = { ...itemToApprove }; delete cleanedItem.dbKey;
 
-            const approvedRef = window.dbPush(window.dbRef(window.db, "approved"));
-            await window.dbSet(approvedRef, cleanedItem);
+            await window.dbSet(window.dbPush(window.dbRef(window.db, "approved")), cleanedItem);
             await window.dbRemove(window.dbRef(window.db, `pending/${dbKey}`));
-
-            alert("Đã duyệt thủ công giao dịch!");
-            try {
-                await fetch(`https://api.telegram.org/bot${TG_CONFIG.token}/sendMessage`, {
-                    method: 'POST', headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ chat_id: TG_CONFIG.chatId, text: `✅ *[ADMIN ĐÃ DUYỆT]*\n👤 *Thành viên:* ${cleanedItem.user}\n💵 *Số tiền:* ${cleanedItem.amount.toLocaleString()}đ\n💼 *Trạng thái:* Thành công và bảo lưu số dư ví.`, parse_mode: 'Markdown' })
-                });
-            } catch (e) {}
+            alert("Đã phê duyệt đơn!");
         };
 
         window.rejectTx = async function(dbKey) {
-            const item = pendingTransactions.find(t => t.dbKey === dbKey);
-            if (!item) return;
-            if (confirm("Từ chối yêu cầu này? Hệ thống sẽ hoàn lại số tiền này cho thành viên.")) {
+            if (confirm("Từ chối đơn này?")) {
                 await window.dbRemove(window.dbRef(window.db, `pending/${dbKey}`));
-                alert("Đã huỷ yêu cầu.");
-                try {
-                    await fetch(`https://api.telegram.org/bot${TG_CONFIG.token}/sendMessage`, {
-                        method: 'POST', headers: { 'Content-Type': 'application/json' },
-                        body: JSON.stringify({ chat_id: TG_CONFIG.chatId, text: `❌ *[ADMIN TỪ CHỐI]*\n👤 *Thành viên:* ${item.user}\n💵 *Số tiền:* ${item.amount.toLocaleString()}đ\n💼 *Trạng thái:* Đã bị hủy bỏ.`, parse_mode: 'Markdown' })
-                    });
-                } catch (e) {}
+                alert("Đã hủy đơn.");
             }
         };
 
         window.deleteApprovedTx = async function(dbKey) {
-            if (currentUser !== 'pwuyn') return;
-            if (confirm("Xóa vĩnh viễn giao dịch đã duyệt này khỏi Database Quỹ Tổng?")) {
+            if (confirm("Xóa vĩnh viễn đơn này khỏi quỹ tổng?")) {
                 await window.dbRemove(window.dbRef(window.db, `approved/${dbKey}`));
-                alert("Đã xóa khỏi cơ sở dữ liệu đám mây.");
             }
         };
 
@@ -575,7 +535,7 @@
             const p = document.getElementById('newPassword').value.trim();
             if (users[u]) { alert("Tài khoản đã tồn tại!"); return; }
             window.dbSet(window.dbRef(window.db, `users/${u}`), p);
-            alert("Tạo tài khoản thành công!");
+            alert("Tạo thành công!");
             document.getElementById('newUsername').value = ''; document.getElementById('newPassword').value = '';
         });
 
