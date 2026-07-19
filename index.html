@@ -13,7 +13,7 @@
     <!-- TÍCH HỢP THƯ VIỆN VẼ BIỂU ĐỒ CHART.JS -->
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 
-    <!-- TÍCH HỢP FIREBASE -->
+    <!-- TÍCH HỢP FIREBASE REALTIME DATABASE -->
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/9.22.1/firebase-app.js";
         import { getDatabase, ref, set, push, onValue, update, remove } from "https://www.gstatic.com/firebasejs/9.22.1/firebase-database.js";
@@ -120,7 +120,7 @@
         <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
             <!-- CỘT TRÁI: FORM KHAI BÁO -->
             <div class="md:col-span-1 space-y-6">
-                <!-- Quản lý Thành Viên (Chỉ Admin pwuyn thấy) -->
+                <!-- Quản lý Thành Viên (Chỉ Admin pwuyn hoặc gbao08 thấy) -->
                 <div id="adminPanel" class="bg-white dark:bg-gray-800 p-6 rounded-2xl shadow-sm border border-gray-100 dark:border-gray-700 hidden">
                     <h2 class="text-lg font-semibold text-gray-700 dark:text-gray-200 mb-4 flex items-center gap-2"><span>👥</span> Quản Lý Thành Viên</h2>
                     <form id="createUserForm" class="space-y-3">
@@ -184,7 +184,7 @@
                     </div>
                 </div>
 
-                <!-- KHO DỮ LIỆU TOÀN HỆ THỐNG (CHỈ ADMIN PWUYN THẤY) -->
+                <!-- KHO DỮ LIỆU TOÀN HỆ THỐNG (CHỈ ADMIN PWUYN & GBAO08 THẤY) -->
                 <div id="adminDataSection" class="space-y-6 hidden">
                     <!-- HỘP THƯ CHỜ DUYỆT -->
                     <div class="bg-yellow-50/50 dark:bg-yellow-950/10 p-6 rounded-2xl border border-yellow-200 dark:border-yellow-900/50">
@@ -239,7 +239,7 @@
     </div>
 
     <script>
-        // CẬP NHẬT ĐÚNG TOKEN MỚI VÀ ID NHÓM CỦA BẠN
+        // CẤU HÌNH ĐÚNG TELEGRAM CỦA BẠN
         const TG_CONFIG = { 
             token: "8910656676:AAGgmXz6UHT_uZfaYvp2Ssm4natscH7VQSo", 
             chatId: "-5515276053" 
@@ -276,10 +276,12 @@
         function initRealtimeSync() {
             window.dbOnValue(window.dbRef(window.db, "users"), (snapshot) => {
                 users = snapshot.val() || {};
+                // Tự động khởi tạo cấu hình các tài khoản mặc định
                 if (!users["pwuyn"]) window.dbSet(window.dbRef(window.db, "users/pwuyn"), "1");
                 if (!users["gbao"]) window.dbSet(window.dbRef(window.db, "users/gbao"), "1");
-                if (!users["gbao08"]) window.dbSet(window.dbRef(window.db, "users/gbao08"), "1");
-                if (currentUser === 'pwuyn') updateUserListGiaoDien();
+                if (!users["gbao08"]) window.dbSet(window.dbRef(window.db, "users/gbao08"), "1"); // Tài khoản admin/user cấu hình sẵn
+                
+                if (currentUser === 'pwuyn' || currentUser === 'gbao08') updateUserListGiaoDien();
             });
 
             window.dbOnValue(window.dbRef(window.db, "pending"), (snapshot) => {
@@ -307,7 +309,8 @@
             document.getElementById('mainApp').classList.remove('hidden');
             document.getElementById('currentUserLabel').innerText = `Tài khoản: ${currentUser}`;
             
-            if (currentUser === 'pwuyn') {
+            // Phân quyền: Cả pwuyn và gbao08 đều có quyền Admin quản trị hệ thống
+            if (currentUser === 'pwuyn' || currentUser === 'gbao08') {
                 document.getElementById('adminPanel').classList.remove('hidden');
                 document.getElementById('adminDataSection').classList.remove('hidden');
                 document.getElementById('userWalletPanel').classList.add('hidden');
@@ -375,7 +378,8 @@
             let totalGrantedLimit = calculateTotalGrantedLimit(userTotalRevenue);
             globalAvailableBalance = Math.max(0, totalGrantedLimit - userApprovedWithdrawn - userPendingWithdraw);
 
-            if (currentUser && currentUser !== 'pwuyn') {
+            // Giao diện User
+            if (currentUser && currentUser !== 'pwuyn' && currentUser !== 'gbao08') {
                 document.getElementById('walletRevenue').innerText = `${userTotalRevenue.toLocaleString()}đ`;
                 document.getElementById('walletMaxWithdraw').innerText = `${totalGrantedLimit.toLocaleString()}đ`;
                 document.getElementById('walletWithdrawn').innerText = `${userPendingWithdraw.toLocaleString()}đ chờ / ${userApprovedWithdrawn.toLocaleString()}đ đã nhận`;
@@ -410,7 +414,8 @@
                 buildUserAnalyticsChart(myApproved);
             }
 
-            if (currentUser === 'pwuyn') {
+            // Giao diện Admin
+            if (currentUser === 'pwuyn' || currentUser === 'gbao08') {
                 const pendingTable = document.getElementById('pendingTable');
                 pendingTable.innerHTML = '';
                 document.getElementById('pendingCount').innerText = `${pendingTransactions.length} yêu cầu`;
@@ -519,7 +524,7 @@
             return new Blob([ab], {type: mimeString});
         }
 
-        // --- HÀM SUBMIT VÀ GỬI LÊN TELEGRAM KÈM ẢNH THỰC TẾ ---
+        // --- HÀM SUBMIT KHAI BÁO BILL LÊN TELEGRAM ---
         document.getElementById('transactionForm').addEventListener('submit', async (e) => {
             e.preventDefault();
             const btnSubmit = document.getElementById('btnSubmitTx');
@@ -530,7 +535,7 @@
 
             if (amount <= 0) { alert("Số tiền không hợp lệ!"); return; }
 
-            if (txType === 'withdraw' && currentUser !== 'pwuyn') {
+            if (txType === 'withdraw' && currentUser !== 'pwuyn' && currentUser !== 'gbao08') {
                 if (amount > globalAvailableBalance) {
                     alert(`Không đủ hạn mức! Bạn hiện tại chỉ còn: ${globalAvailableBalance.toLocaleString()}đ.`);
                     return;
@@ -564,7 +569,7 @@
                 });
             }
 
-            // Quét AI
+            // Quét AI tự động duyệt
             let aiApproved = false;
             if (txType === 'income' && proofImgBase64) {
                 btnSubmit.innerText = "🤖 AI đang quét hóa đơn...";
@@ -584,68 +589,91 @@
                 time: new Date().toLocaleTimeString('vi-VN') + ' ' + new Date().toLocaleDateString('vi-VN')
             };
 
-            // Thiết lập nội dung text cho Telegram
             const isGbeo = (currentUser === "gbao" || currentUser === "gbao08");
             let teleMessage = "";
 
             if (aiApproved) {
                 await window.dbSet(window.dbPush(window.dbRef(window.db, "approved")), pendingItem);
                 teleMessage = isGbeo 
-                    ? `🤖 [AI TỰ ĐỘNG DUYỆT]\n\n💝 vợ ơi check bill và duyệt doanh thu cho gbeo nha\n💵 Số tiền: +${amount.toLocaleString()} VNĐ\n📝 Nội dung: ${sourceInput.value}\n\n⚡ Trạng thái: AI quét trùng khớp và TỰ ĐỘNG DUYỆT luôn!`
+                    ? `🤖 [AI TỰ ĐỘNG DUYỆT]\n\n💝 Vợ ơi check bill và duyệt doanh thu cho gbeo nha\n💵 Số tiền: +${amount.toLocaleString()} VNĐ\n📝 Nội dung: ${sourceInput.value}\n\n⚡ Trạng thái: AI quét trùng khớp và TỰ ĐỘNG DUYỆT luôn!`
                     : `🤖 [AI TỰ ĐỘNG DUYỆT]\n\n👤 User: ${currentUser}\n💵 Số tiền: +${amount.toLocaleString()} VNĐ\n📝 Nội dung: ${sourceInput.value}`;
                 alert("✨ AI đã quét chính xác hóa đơn và tự động DUYỆT luôn!");
             } else {
                 await window.dbSet(window.dbPush(window.dbRef(window.db, "pending")), pendingItem);
                 teleMessage = isGbeo 
-                    ? `💬 [YÊU CẦU MỚI]\n\n💝 vợ ơi check bill và duyệt doanh thu cho gbeo nha\n💵 Số tiền: ${amount.toLocaleString()} VNĐ\n📝 Nội dung: ${sourceInput.value}\n\n⏳ Chờ vợ duyệt thủ công (AI không tự quét được).`
+                    ? `💬 [YÊU CẦU MỚI]\n\n💝 Vợ ơi check bill và duyệt doanh thu cho gbeo nha\n💵 Số tiền: ${amount.toLocaleString()} VNĐ\n📝 Nội dung: ${sourceInput.value}\n\n⏳ Chờ vợ duyệt thủ công (AI không tự quét được).`
                     : `💬 [YÊU CẦU MỚI]\n\n👤 User: ${currentUser}\n💵 Số tiền: ${amount.toLocaleString()} VNĐ\n📝 Nội dung: ${sourceInput.value}`;
                 alert("Đã gửi đơn lên hệ thống thành công!");
             }
 
-            // --- LUỒNG GỬI TELEGRAM KÈM FILE ẢNH XỊN ---
+            // Gửi Telegram khi gửi đơn
             try {
                 if (proofImgBase64 && txType !== 'withdraw') {
-                    // Nếu có ảnh -> dùng API sendPhoto đẩy Form Data
                     let formData = new FormData();
                     formData.append("chat_id", TG_CONFIG.chatId);
                     formData.append("caption", teleMessage);
-                    
-                    // Chuyển Base64 đã nén thành File thực tế
                     let imageBlob = dataURItoBlob(proofImgBase64);
                     formData.append("photo", imageBlob, "bill_check.jpg");
+                    await fetch(`https://api.telegram.org/bot${TG_CONFIG.token}/sendPhoto`, { method: 'POST', body: formData });
+                } else {
+                    await fetch(`https://api.telegram.org/bot${TG_CONFIG.token}/sendMessage`, {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({ chat_id: TG_CONFIG.chatId, text: teleMessage })
+                    });
+                }
+            } catch (e) { console.error("Lỗi kết nối API Telegram: ", e); }
+
+            document.getElementById('amountInputText').value = ''; document.getElementById('amount').value = '';
+            sourceInput.value = ''; if(fileInput) fileInput.value = '';
+            btnSubmit.disabled = false; btnSubmit.innerText = "Gửi Phê Duyệt";
+        });
+
+        // --- CÁC HÀM PHÊ DUYỆT CỦA ADMIN (ĐÃ TÍCH HỢP TỰ ĐỘNG BẮN TELEGRAM KÈM ẢNH KHI DUYỆT) ---
+        window.approveTx = async function(dbKey) {
+            const itemToApprove = pendingTransactions.find(t => t.dbKey === dbKey);
+            if (!itemToApprove) return;
+            
+            const cleanedItem = { ...itemToApprove }; 
+            delete cleanedItem.dbKey;
+
+            // 1. Lưu dữ liệu sang bảng Approved và xóa khỏi bảng Pending của Firebase
+            await window.dbSet(window.dbPush(window.dbRef(window.db, "approved")), cleanedItem);
+            await window.dbRemove(window.dbRef(window.db, `pending/${dbKey}`));
+
+            // 2. Tạo nội dung chữ thông báo đã duyệt
+            let approvedMessage = `🟢 [ĐÃ DUYỆT ĐƠN HÀNG]\n----------------------------------\n👤 Quản trị viên: ${currentUser} vừa duyệt thành công.\n👤 Tài khoản yêu cầu: ${cleanedItem.user}\n💵 Số tiền: ${cleanedItem.amount.toLocaleString()} VNĐ\n📝 Nội dung: ${cleanedItem.source}\n⏱️ Thời gian: ${new Date().toLocaleTimeString('vi-VN')} ngày ${new Date().toLocaleDateString('vi-VN')}\n----------------------------------\nTrạng thái: Đã cập nhật số dư hệ thống!`;
+
+            // 3. Tiến hành bắn tin nhắn báo duyệt về nhóm Telegram
+            try {
+                if (cleanedItem.proofImg) {
+                    // Nếu đơn hàng có ảnh bill cũ lưu trên Firebase, chuyển sang file blob để bắn kèm tin nhắn
+                    let formData = new FormData();
+                    formData.append("chat_id", TG_CONFIG.chatId);
+                    formData.append("caption", approvedMessage);
+                    let imageBlob = dataURItoBlob(cleanedItem.proofImg);
+                    formData.append("photo", imageBlob, "bill_approved.jpg");
 
                     await fetch(`https://api.telegram.org/bot${TG_CONFIG.token}/sendPhoto`, {
                         method: 'POST',
                         body: formData
                     });
                 } else {
-                    // Nếu rút tiền không có ảnh -> gửi tin nhắn text thường bằng sendMessage
+                    // Nếu là đơn rút tiền không có ảnh bill -> Bắn tin nhắn text
                     await fetch(`https://api.telegram.org/bot${TG_CONFIG.token}/sendMessage`, {
                         method: 'POST',
                         headers: { 'Content-Type': 'application/json' },
                         body: JSON.stringify({
                             chat_id: TG_CONFIG.chatId,
-                            text: teleMessage
+                            text: approvedMessage
                         })
                     });
                 }
-            } catch (e) { console.error("Lỗi kết nối API Telegram: ", e); }
+            } catch (err) {
+                console.error("Lỗi gửi dữ liệu duyệt lên Telegram: ", err);
+            }
 
-            // Reset form
-            document.getElementById('amountInputText').value = ''; document.getElementById('amount').value = '';
-            sourceInput.value = ''; if(fileInput) fileInput.value = '';
-            btnSubmit.disabled = false; btnSubmit.innerText = "Gửi Phê Duyệt";
-        });
-
-        // --- CÁC HÀM PHÊ DUYỆT CỦA ADMIN ---
-        window.approveTx = async function(dbKey) {
-            const itemToApprove = pendingTransactions.find(t => t.dbKey === dbKey);
-            if (!itemToApprove) return;
-            const cleanedItem = { ...itemToApprove }; delete cleanedItem.dbKey;
-
-            await window.dbSet(window.dbPush(window.dbRef(window.db, "approved")), cleanedItem);
-            await window.dbRemove(window.dbRef(window.db, `pending/${dbKey}`));
-            alert("Đã phê duyệt đơn!");
+            alert("Đã phê duyệt đơn và gửi thông báo công khai lên Telegram!");
         };
 
         window.rejectTx = async function(dbKey) {
@@ -674,7 +702,8 @@
         function updateUserListGiaoDien() {
             const c = document.getElementById('userList'); if (!c) return; c.innerHTML = '';
             Object.keys(users).forEach(u => {
-                c.innerHTML += `<li class="py-1 flex justify-between"><span>${u} ${u==='pwuyn'?'<b>(Admin)</b>':''}</span><span class="text-gray-400">MK: ${users[u]}</span></li>`;
+                let adminBadge = (u === 'pwuyn' || u === 'gbao08') ? '<b>(Admin)</b>' : '';
+                c.innerHTML += `<li class="py-1 flex justify-between"><span>${u} ${adminBadge}</span><span class="text-gray-400">MK: ${users[u]}</span></li>`;
             });
         }
     </script>
